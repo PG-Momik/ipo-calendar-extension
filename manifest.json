@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "IPO Notifier",
+  "description": "Get real-time IPO notifications and add them to your calendar.",
+  "icons": {
+    "16": "images/icon_16.png",
+    "48": "images/icon_48.png",
+    "128": "images/icon_128.png"
+  },
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "images/icon_16.png",
+      "48": "images/icon_48.png"
+    }
+  },
+  "options_page": "options/index.html",
+  "background": {
+    "service_worker": "background/service-worker.ts"
+  },
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*"
+  ]
+}
