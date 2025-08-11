@@ -27,5 +27,11 @@
   ],
   "host_permissions": [
     "http://localhost:8000/*"
-  ]
+  ],
+  "web_accessible_resources": [
+  {
+    "resources": ["auth/index.html"],
+    "matches": ["<all_urls>"]
+  }
+]
 }
