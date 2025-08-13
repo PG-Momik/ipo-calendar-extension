@@ -39,6 +39,10 @@ export const useAuthStore = defineStore('auth', {
         if (!response.ok) throw new Error('Auth failed')
 
         this.user = await response.json()
+
+        console.log('response.json()');
+        console.log(this.user);
+
         this.isAuthenticated = true
         // Tell the background script to connect to WebSockets
         chrome.runtime.sendMessage({ type: 'webSocket:connect' });
@@ -49,10 +53,38 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    handleLogin() {
-      // This URL must match the route in your Laravel backend
-      const redirectUrl = `${API_URL}/auth/google/redirect`
-      chrome.tabs.create({ url: redirectUrl })
+    async handleLogin() {
+      this.isLoading = true;
+      try {
+        const authUrl = `${API_URL}/auth/google/redirect`;
+
+        const finalRedirectUrl = await chrome.identity.launchWebAuthFlow({
+          url: authUrl,
+          interactive: true,
+        });
+
+        if (chrome.runtime.lastError || !finalRedirectUrl) {
+          throw new Error(chrome.runtime.lastError?.message || 'Authentication flow failed.');
+        }
+
+        const url = new URL(finalRedirectUrl);
+        const token = url.searchParams.get('token');
+
+        if (!token) {
+          throw new Error('Token not found in redirect URL.');
+        }
+
+        // We have the token! Now save it and fetch the user.
+        await storage.local.set({ authToken: token });
+
+        this.token = token;
+
+        await this.fetchUser();
+      } catch (error) {
+        console.error('Login failed:', error);
+      } finally {
+        this.isLoading = false;
+      }
     },
 
     async logout() {
@@ -66,7 +98,7 @@ export const useAuthStore = defineStore('auth', {
       }
       // Tell the background script to disconnect
       chrome.runtime.sendMessage({ type: 'webSocket:disconnect' });
-      
+
       await storage.local.remove('authToken')
       this.token = null
       this.user = null
