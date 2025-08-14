@@ -40,11 +40,9 @@ export const useAuthStore = defineStore('auth', {
 
         this.user = await response.json()
 
-        console.log('response.json()');
-        console.log(this.user);
 
         this.isAuthenticated = true
-        // Tell the background script to connect to WebSockets
+
         chrome.runtime.sendMessage({ type: 'webSocket:connect' });
 
       } catch (error) {

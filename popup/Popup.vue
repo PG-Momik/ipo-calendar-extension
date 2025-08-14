@@ -11,12 +11,17 @@ const activeView = ref('dashboard'); // 'dashboard' or 'ipos'
 
 onMounted(() => {
   authStore.initialize();
+  // Tell the IPO store to start listening for real-time changes
+  ipoStore.listenForUpdates();
 });
 
-// When the user logs in, fetch their IPOs
+// When the user authenticates, fetch the initial IPO list
 watch(() => authStore.isAuthenticated, (isAuth) => {
   if (isAuth) {
     ipoStore.fetchIpos();
+  } else {
+    // Clear IPOs on logout to prevent showing stale data
+    ipoStore.ipos = [];
   }
 });
 
@@ -78,43 +83,6 @@ function showIpoList() {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
-.view-all-button {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(to right, #3B82F6, #60A5FA);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 16px;
-}
-.view-all-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
-}
-
-.ipo-view {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100%;
-}
-.back-button {
-  background: none;
-  border: none;
-  color: #94A3B8;
-  font-weight: 500;
-  cursor: pointer;
-  align-self: flex-start;
-  padding: 4px 0;
-}
-.back-button:hover {
-  color: #F1F5F9;
-}
-
 .popup-container { width: 350px; min-height: 450px; background-color: #2C2828; color: #F1F5F9; font-family: 'Poppins', sans-serif; display: flex; align-items: center; justify-content: center; }
 .content-wrapper { width: 100%; height: 100%; padding: 24px; display: flex; flex-direction: column; }
 .state-container--loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
@@ -130,8 +98,13 @@ function showIpoList() {
 .logout-button:hover { background: #4A4545; color: white; transform: scale(1.05); }
 .logout-button svg { width: 18px; height: 18px; }
 .dashboard__main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.ipo-view { display: flex; flex-direction: column; gap: 16px; height: 100%; }
+.back-button { background: none; border: none; color: #94A3B8; font-weight: 500; cursor: pointer; align-self: flex-start; padding: 4px 0; }
+.back-button:hover { color: #F1F5F9; }
 .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .metric-card { background-color: #383434; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px; border: 1px solid #4A4545; }
 .metric-card__value { font-size: 2rem; font-weight: 600; color: white; }
 .metric-card__label { font-size: 0.8125rem; font-weight: 400; color: #94A3B8; }
+.view-all-button { width: 100%; padding: 12px; background: linear-gradient(to right, #3B82F6, #60A5FA); color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 16px; }
+.view-all-button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25); }
 </style>

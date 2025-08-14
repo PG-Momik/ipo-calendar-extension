@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { storage } from 'webextension-polyfill'
 import { useAuthStore } from './auth'
 
 const API_URL = 'http://localhost:8000'
@@ -21,11 +22,33 @@ export const useIpoStore = defineStore('ipos', {
     }),
 
     actions: {
-        async fetchIpos() {
-            const authStore = useAuthStore()
-            if (!authStore.isAuthenticated) return
+        // Listens for changes made by the background script to chrome.storage
+        listenForUpdates() {
+            storage.onChanged.addListener((changes, area) => {
+                if (area === 'local' && changes.ipos) {
+                    console.log('IPO Store: Detected a change in stored IPOs. Updating UI.')
+                    // Reactively update the state with the new data
+                    this.ipos = changes.ipos.newValue
+                }
+            })
+        },
 
+        // Fetches the initial list of IPOs from the API
+        async fetchIpos() {
             this.isLoading = true
+            // First, try to load from local storage for a fast UI update
+            const { ipos: storedIpos } = await storage.local.get('ipos')
+            if (storedIpos) {
+                this.ipos = storedIpos
+            }
+
+            // Then, fetch from the API to ensure data is fresh
+            const authStore = useAuthStore()
+            if (!authStore.isAuthenticated) {
+                this.isLoading = false
+                return
+            }
+
             this.error = null
             try {
                 const response = await fetch(`${API_URL}/api/ipos`, {
@@ -34,24 +57,26 @@ export const useIpoStore = defineStore('ipos', {
                         'Accept': 'application/json',
                     },
                 })
+                if (!response.ok) throw new Error('Failed to fetch IPO data.')
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch IPO data.')
-                }
+                const apiIpos = await response.json()
+                this.ipos = apiIpos
+                // IMPORTANT: Update local storage with the fresh data from the API
+                await storage.local.set({ ipos: apiIpos })
 
-                this.ipos = await response.json()
             } catch (err: any) {
-                this.error = err.message || 'An unknown error occurred.'
+                this.error = err.message
             } finally {
                 this.isLoading = false
             }
         },
 
+        // Handles adding a single IPO to the Google Calendar via the backend
         async addToCalendar(ipoId: number) {
             const authStore = useAuthStore()
             if (!authStore.isAuthenticated) return
 
-            this.addStatus[ipoId] = 'adding' // Set status to 'adding'
+            this.addStatus[ipoId] = 'adding'
 
             try {
                 const response = await fetch(`${API_URL}/api/ipo/${ipoId}/add-to-calendar`, {
@@ -66,14 +91,12 @@ export const useIpoStore = defineStore('ipos', {
                     throw new Error('Could not add to calendar.')
                 }
 
-                this.addStatus[ipoId] = 'success' // Set status to 'success'
-                // Reset status after a few seconds
+                this.addStatus[ipoId] = 'success'
                 setTimeout(() => { delete this.addStatus[ipoId] }, 3000)
 
             } catch (err) {
-                this.addStatus[ipoId] = 'error' // Set status to 'error'
+                this.addStatus[ipoId] = 'error'
                 console.error('Failed to add to calendar:', err)
-                // Reset status after a few seconds
                 setTimeout(() => { delete this.addStatus[ipoId] }, 3000)
             }
         }
