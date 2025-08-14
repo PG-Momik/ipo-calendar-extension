@@ -78,7 +78,7 @@ const authStore = useAuthStore();
   padding: 16px;
   border: 1px solid #4A4545; /* Darker border */
   border-radius: 8px;
-  background-color: #383434; /* Slightly lighter than main bg */
+  background: rgba(10, 10, 11, 0.85);
   color: #F1F5F9;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;

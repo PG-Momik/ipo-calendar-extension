@@ -13,6 +13,15 @@ export interface Ipo {
     description: string | null
 }
 
+const mockIpos: Ipo[] = [
+    { id: 1, name: 'Stripe', ticker: 'STRP', valuation: '$60B', ipo_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), tags: ['FinTech'], priceRange: '$34-39', interest: 'High interest' },
+    { id: 2, name: 'Discord', ticker: 'DSCD', valuation: '$15B', ipo_date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(), tags: ['AI', 'Social'], priceRange: '', interest: 'Growing buzz' },
+    { id: 3, name: 'Canva', ticker: 'CVNA', valuation: '$35B', ipo_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), tags: ['E-commerce'], priceRange: '$28-31', interest: 'High interest' },
+    { id: 4, name: 'Notion', ticker: 'NTN', valuation: '$10B', ipo_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), tags: ['Productivity'], priceRange: '', interest: 'Growing buzz' },
+    { id: 5, name: 'Databricks', ticker: 'DBRK', valuation: '$43B', ipo_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(), tags: ['Data', 'AI'], priceRange: '$70-80', interest: 'High interest' },
+];
+
+
 export const useIpoStore = defineStore('ipos', {
     state: () => ({
         ipos: [] as Ipo[],
@@ -22,56 +31,23 @@ export const useIpoStore = defineStore('ipos', {
     }),
 
     actions: {
-        // Listens for changes made by the background script to chrome.storage
-        listenForUpdates() {
-            storage.onChanged.addListener((changes, area) => {
-                if (area === 'local' && changes.ipos) {
-                    console.log('IPO Store: Detected a change in stored IPOs. Updating UI.')
-                    // Reactively update the state with the new data
-                    this.ipos = changes.ipos.newValue
-                }
-            })
-        },
-
-        // Fetches the initial list of IPOs from the API
         async fetchIpos() {
-            this.isLoading = true
-            // First, try to load from local storage for a fast UI update
-            const { ipos: storedIpos } = await storage.local.get('ipos')
-            if (storedIpos) {
-                this.ipos = storedIpos
-            }
-
-            // Then, fetch from the API to ensure data is fresh
             const authStore = useAuthStore()
-            if (!authStore.isAuthenticated) {
-                this.isLoading = false
-                return
-            }
+            if (!authStore.isAuthenticated) return
 
-            this.error = null
-            try {
-                const response = await fetch(`${API_URL}/api/ipos`, {
-                    headers: {
-                        'Authorization': `Bearer ${authStore.token}`,
-                        'Accept': 'application/json',
-                    },
-                })
-                if (!response.ok) throw new Error('Failed to fetch IPO data.')
+            this.isLoading = true;
+            this.error = null;
+            // Simulate API call with a delay
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-                const apiIpos = await response.json()
-                this.ipos = apiIpos
-                // IMPORTANT: Update local storage with the fresh data from the API
-                await storage.local.set({ ipos: apiIpos })
+            // In a real app, you would fetch from your API. Here, we use the mock data.
+            this.ipos = mockIpos;
+            // const response = await fetch(...);
+            // this.ipos = await response.json();
 
-            } catch (err: any) {
-                this.error = err.message
-            } finally {
-                this.isLoading = false
-            }
+            this.isLoading = false;
         },
 
-        // Handles adding a single IPO to the Google Calendar via the backend
         async addToCalendar(ipoId: number) {
             const authStore = useAuthStore()
             if (!authStore.isAuthenticated) return

@@ -27,24 +27,16 @@ export const useAuthStore = defineStore('auth', {
 
     async fetchUser() {
       if (!this.token) return
-
       try {
         const response = await fetch(`${API_URL}/api/user`, {
           headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: 'application/json',
+            'Authorization': `Bearer ${this.token}`,
+            'Accept': 'application/json',
           },
         })
-
         if (!response.ok) throw new Error('Auth failed')
-
         this.user = await response.json()
-
-
         this.isAuthenticated = true
-
-        chrome.runtime.sendMessage({ type: 'webSocket:connect' });
-
       } catch (error) {
         console.error('Failed to fetch user, logging out.', error)
         await this.logout()
@@ -72,7 +64,6 @@ export const useAuthStore = defineStore('auth', {
           throw new Error('Token not found in redirect URL.');
         }
 
-        // We have the token! Now save it and fetch the user.
         await storage.local.set({ authToken: token });
 
         this.token = token;
@@ -87,15 +78,13 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       this.isLoading = true
+
       if (this.token) {
-        // Inform the backend to invalidate the token
         await fetch(`${API_URL}/api/logout`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${this.token}` },
+          headers: { 'Authorization': `Bearer ${this.token}` },
         })
       }
-      // Tell the background script to disconnect
-      chrome.runtime.sendMessage({ type: 'webSocket:disconnect' });
 
       await storage.local.remove('authToken')
       this.token = null
