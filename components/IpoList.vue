@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import {ref, computed, nextTick, watch} from 'vue';
 import { useIpoStore, type Ipo } from '../stores/ipos';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -7,6 +7,10 @@ dayjs.extend(relativeTime);
 
 const ipoStore = useIpoStore();
 const activeTab = ref<'thisWeek' | 'upcoming' | 'pipeline'>('thisWeek');
+const transitionDirection = ref('slide-left');
+
+const tabsContainer = ref<HTMLElement | null>(null);
+const activeTabIndicator = ref<HTMLElement | null>(null);
 
 // Computed properties for filtering IPOs into tabs
 const thisWeekIpos = computed(() => {
@@ -41,6 +45,7 @@ const currentIpos = computed(() => {
   }
 });
 
+
 // Helper for IPO Type badge styling
 function getTypeClass(type: Ipo['type']) {
   if (type === 'FPO') return 'type-badge--fpo';
@@ -67,10 +72,43 @@ function formatDate(dateString: string): string {
   }
   return date.format('MMM D');
 }
+
+function switchTab(newTab: 'thisWeek' | 'upcoming' | 'pipeline') {
+  const tabs = ['thisWeek', 'upcoming', 'pipeline'];
+  const currentIndex = tabs.indexOf(activeTab.value);
+  const newIndex = tabs.indexOf(newTab);
+
+  if (newIndex > currentIndex) {
+    transitionDirection.value = 'slide-left';
+  } else {
+    transitionDirection.value = 'slide-right';
+  }
+
+  activeTab.value = newTab;
+}
+
+function updateIndicatorPosition() {
+  if (!tabsContainer.value || !activeTabIndicator.value) return;
+
+  const activeTabElement = tabsContainer.value.querySelector('.active') as HTMLElement;
+  if (activeTabElement) {
+    const containerRect = tabsContainer.value.getBoundingClientRect();
+    const activeRect = activeTabElement.getBoundingClientRect();
+
+    activeTabIndicator.value.style.width = `${activeRect.width}px`;
+    activeTabIndicator.value.style.transform = `translateX(${activeRect.left - containerRect.left}px)`;
+  }
+}
+
+watch(activeTab, async () => {
+  await nextTick();
+  updateIndicatorPosition();
+});
 </script>
 
 <template>
   <div class="list-view">
+
     <header class="header">
       <div class="logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -88,18 +126,26 @@ function formatDate(dateString: string): string {
       </button>
     </header>
 
-    <nav class="tabs">
-      <button @click="activeTab = 'thisWeek'" :class="{ 'active': activeTab === 'thisWeek' }">This Week</button>
-      <button @click="activeTab = 'upcoming'" :class="{ 'active': activeTab === 'upcoming' }">Upcoming</button>
-      <button @click="activeTab = 'pipeline'" :class="{ 'active': activeTab === 'pipeline' }">Pipeline</button>
+    <nav class="tabs" ref="tabsContainer">
+      <button @click="switchTab('thisWeek')" :class="{ 'active': activeTab === 'thisWeek' }">This Week</button>
+      <button @click="switchTab('upcoming')" :class="{ 'active': activeTab === 'upcoming' }">Upcoming</button>
+      <button @click="switchTab('pipeline')" :class="{ 'active': activeTab === 'pipeline' }">Pipeline</button>
+      <!-- The new animated underline element -->
+      <div class="active-tab-indicator" ref="activeTabIndicator"></div>
     </nav>
 
     <div class="content">
-      <div v-if="ipoStore.isLoading" class="state-message">Loading...</div>
+      <div v-if="ipoStore.isLoading" class="loading-bar-container">
+        <div class="loading-bar"></div>
+      </div>
+
       <div v-else-if="ipoStore.error" class="state-message error">Could not load IPOs.</div>
-      <div v-else-if="currentIpos.length === 0" class="state-message">No IPOs in this category.</div>
+
+      <Transition :name="transitionDirection" mode="out-in">
+        <div :key="activeTab" class="ipo-list-wrapper">
+      <div v-if="currentIpos.length === 0" class="state-message">No IPOs in this category.</div>
       <div v-else class="ipo-list">
-        <div class="ipo-card" v-for="ipo in currentIpos" :key="ipo.id">
+        <div class="ipo-card" v-for="(ipo, index) in currentIpos" :key="ipo.id" :style="{ '--delay': `${index * 50}ms` }">
           <div class="card-top">
             <div class="company-logo">{{ ipo.name.charAt(0) }}</div>
             <div class="company-info">
@@ -118,17 +164,20 @@ function formatDate(dateString: string): string {
               </svg>
             </div>
           </div>
-          <div class="card-bottom">
-            <div class="subscription-status" :class="getSubscriptionClass(ipo.subscriptionStatus)">
-              <span class="status-icon">
-                <template v-if="getSubscriptionClass(ipo.subscriptionStatus) === 'sub-status--oversubscribed'">🔥</template>
-                <template v-else>📉</template>
-              </span>
-              {{ ipo.subscriptionStatus }}
-            </div>
-          </div>
+<!--          <div class="card-bottom">-->
+<!--            <div class="subscription-status" :class="getSubscriptionClass(ipo.subscriptionStatus)">-->
+<!--              <span class="status-icon">-->
+<!--                <template v-if="getSubscriptionClass(ipo.subscriptionStatus) === 'sub-status&#45;&#45;oversubscribed'">🔥</template>-->
+<!--                <template v-else>📉</template>-->
+<!--              </span>-->
+<!--              {{ ipo.subscriptionStatus }}-->
+<!--            </div>-->
+<!--          </div>-->
         </div>
       </div>
+        </div>
+      </Transition>
+
     </div>
   </div>
 </template>
@@ -141,7 +190,7 @@ function formatDate(dateString: string): string {
   flex-direction: column;
   height: 100%;
   font-family: 'Inter', sans-serif;
-  background-color: #0F172A;
+  background: rgba(10, 10, 11, 0.85);
 }
 .header {
   display: flex; align-items: center; padding: 16px 20px;
@@ -237,4 +286,122 @@ function formatDate(dateString: string): string {
 
 .state-message { text-align: center; color: #71717A; padding: 48px 0; }
 .state-message.error { color: #F87171; }
+
+
+
+.tabs {
+  position: relative; /* Make it a positioning context for the indicator */
+  display: flex;
+  padding: 0 20px;
+  gap: 24px;
+  border-bottom: 1px solid #27272A;
+  flex-shrink: 0;
+}
+.tabs button {
+  background: none;
+  border: none;
+  color: #71717A;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 12px 0;
+  cursor: pointer;
+  /* REMOVED border-bottom from the button itself */
+  transition: color 150ms ease;
+  position: relative;
+  z-index: 1; /* Ensure buttons are clickable above the indicator */
+}
+.tabs button:hover {
+  color: #E4E4E7;
+}
+.tabs button.active {
+  color: #FFFFFF;
+}
+
+/* The new animated underline element */
+.active-tab-indicator {
+  position: absolute;
+  bottom: -1px; /* Sit perfectly on top of the bottom border */
+  left: 0;
+  height: 2px;
+  background-color: #3B82F6;
+  border-radius: 1px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+
+
+.ipo-list-wrapper {
+  transition: all 0.3s ease-in-out;
+}
+
+.slide-left-enter-active,
+.slide-right-enter-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.slide-left-leave-active,
+.slide-right-leave-active {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-left-enter-from,
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.slide-left-leave-to,
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* 2. Loading Bar Animation */
+.loading-bar-container {
+  width: 100%;
+  padding: 48px 0;
+}
+.loading-bar {
+  position: relative;
+  width: 80%;
+  height: 4px;
+  margin: 0 auto;
+  background-color: #27272A;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.loading-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50%;
+  background-color: #3B82F6;
+  border-radius: 2px;
+  animation: loading-bar-animation 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes loading-bar-animation {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(150%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* 3. Staggered Card Entrance Animation */
+.ipo-card {
+  /* ... existing styles */
+  animation: fade-in-up 0.5s both cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-delay: var(--delay);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
