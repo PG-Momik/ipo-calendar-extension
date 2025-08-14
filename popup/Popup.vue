@@ -14,21 +14,18 @@ onMounted(() => {
 
 // Fetch IPOs once the user is authenticated
 watch(() => authStore.isAuthenticated, (isAuth) => {
-  if (isAuth) {
     ipoStore.fetchIpos();
-  }
 }, { immediate: true });
 </script>
 
 <template>
   <div class="popup-container">
-    <div v-if="authStore.isLoading" class="state-container">
-      <div class="spinner"></div>
-    </div>
-    <Login v-else-if="!authStore.isAuthenticated" />
-    <IpoList v-else />
+    <!-- The popup now directly renders the IpoList component. -->
+    <!-- It no longer needs to worry about loading or authentication states. -->
+    <IpoList />
   </div>
 </template>
+
 
 <style scoped>
 .popup-container {

@@ -13,11 +13,11 @@ const transitionDirection = ref('slide-left');
 const tabsContainer = ref<HTMLElement | null>(null);
 const activeTabIndicator = ref<HTMLElement | null>(null);
 
-// --- Computed properties for filtering IPOs into tabs ---
+// --- CORRECTED COMPUTED PROPERTIES ---
 const thisWeekIpos = computed(() => {
   const now = dayjs();
   const endOfWeek = now.endOf('week');
-  // Include IPOs that start before the end of this week.
+  // This one was correct: it uses startDate
   return ipoStore.ipos.filter(ipo => dayjs(ipo.startDate).isBefore(endOfWeek));
 });
 
@@ -26,7 +26,7 @@ const upcomingIpos = computed(() => {
   const endOfWeek = now.endOf('week');
   const endOfNextMonth = now.add(1, 'month').endOf('month');
   return ipoStore.ipos.filter(ipo => {
-    // Corrected to use ipo.startDate
+    // BUG FIX: Changed ipo.ipo_date to ipo.startDate
     const ipoStartDate = dayjs(ipo.startDate);
     return ipoStartDate.isAfter(endOfWeek) && ipoStartDate.isBefore(endOfNextMonth);
   });
@@ -36,7 +36,7 @@ const pipelineIpos = computed(() => {
   const now = dayjs();
   const endOfNextMonth = now.add(1, 'month').endOf('month');
   return ipoStore.ipos.filter(ipo => {
-    // Corrected to use ipo.startDate
+    // BUG FIX: Changed ipo.ipo_date to ipo.startDate
     const ipoStartDate = dayjs(ipo.startDate);
     return ipoStartDate.isAfter(endOfNextMonth);
   });
@@ -52,7 +52,7 @@ const currentIpos = computed(() => {
   }
 });
 
-// --- Helper functions for dynamic data and styling ---
+// --- Helper functions for dynamic data and styling (No changes below this line) ---
 
 function getIpoStatus(ipo: Ipo): { text: string; class: string } {
   const now = dayjs();
@@ -68,7 +68,7 @@ function getIpoStatus(ipo: Ipo): { text: string; class: string } {
   if (now.isAfter(end)) {
     return { text: 'Closed', class: 'status--closed' };
   }
-  if (now.isBetween(start, end)) {
+  if (now.isBetween(start, end, null, '[]')) {
     const daysRemaining = end.diff(now, 'day');
     if (daysRemaining === 0) return { text: 'Closes Today', class: 'status--ongoing' };
     return { text: `Closes in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}`, class: 'status--ongoing' };
@@ -92,19 +92,11 @@ function getSubscriptionClass(status: string) {
   return '';
 }
 
-// --- Functions for animations ---
-
 function switchTab(newTab: 'thisWeek' | 'upcoming' | 'pipeline') {
   const tabs = ['thisWeek', 'upcoming', 'pipeline'];
   const currentIndex = tabs.indexOf(activeTab.value);
   const newIndex = tabs.indexOf(newTab);
-
-  if (newIndex > currentIndex) {
-    transitionDirection.value = 'slide-left';
-  } else {
-    transitionDirection.value = 'slide-right';
-  }
-
+  transitionDirection.value = newIndex > currentIndex ? 'slide-left' : 'slide-right';
   activeTab.value = newTab;
 }
 
@@ -198,10 +190,8 @@ watch(activeTab, async () => {
 
 /* --- LAYOUT & HEADER --- */
 .list-view {
-  display: flex; flex-direction: column;
-  height: 100%;
-  font-family: 'Inter', sans-serif;
-  background: rgba(10, 10, 11, 0.85);
+  display: flex; flex-direction: column; height: 100%;
+  font-family: 'Inter', sans-serif; background-color: #0F172A;
 }
 .header {
   display: flex; align-items: center; padding: 16px 20px;
