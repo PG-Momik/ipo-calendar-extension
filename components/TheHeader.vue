@@ -73,7 +73,6 @@ function changeView(viewName: string) {
 
 <style scoped>
 .dropdown-item {
-  /* ... existing styles ... */
   background: none;
   border: none;
   width: 100%;
@@ -89,7 +88,7 @@ function changeView(viewName: string) {
   padding: 16px 20px;
   border-bottom: 1px solid #27272A;
   flex-shrink: 0;
-  background-color: #0F172A;
+  background: rgba(10, 10, 11, 0.85);
 }
 
 .logo {

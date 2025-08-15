@@ -49,7 +49,7 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
 .popup-container {
   width: 380px;
   height: 600px;
-  background-color: #0F172A;
+  background: rgba(10, 10, 11, 0.85);
   color: #E4E4E7;
   overflow: hidden;
   display: flex;
