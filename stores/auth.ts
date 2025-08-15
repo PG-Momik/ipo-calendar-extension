@@ -5,7 +5,6 @@ import { storage } from 'webextension-polyfill'
 const API_URL = 'http://localhost:8000'
 
 export const useAuthStore = defineStore('auth', {
-  // The state of our application
   state: () => ({
     token: null as string | null,
     user: null as any | null,
@@ -18,15 +17,18 @@ export const useAuthStore = defineStore('auth', {
     async initialize() {
       this.isLoading = true
       const { authToken } = await storage.local.get('authToken')
+
       if (authToken) {
         this.token = authToken
         await this.fetchUser()
       }
+
       this.isLoading = false
     },
 
     async fetchUser() {
       if (!this.token) return
+
       try {
         const response = await fetch(`${API_URL}/api/user`, {
           headers: {
@@ -34,17 +36,22 @@ export const useAuthStore = defineStore('auth', {
             'Accept': 'application/json',
           },
         })
+
         if (!response.ok) throw new Error('Auth failed')
+
         this.user = await response.json()
         this.isAuthenticated = true
       } catch (error) {
         console.error('Failed to fetch user, logging out.', error)
+
         await this.logout()
       }
+
     },
 
     async handleLogin() {
       this.isLoading = true;
+
       try {
         const authUrl = `${API_URL}/auth/google/redirect`;
 

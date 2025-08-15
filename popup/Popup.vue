@@ -1,57 +1,80 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
-import { useAuthStore } from '../stores/auth';
-import { useIpoStore } from '../stores/ipos';
-import Login from '../components/Login.vue';
+import {onMounted, ref, watch} from 'vue';
+import {useAuthStore} from '../stores/auth';
+import {useIpoStore} from '../stores/ipos';
+import TheHeader from "../components/TheHeader.vue";
 import IpoList from '../components/IpoList.vue';
+import AddToCalendar from '../components/AddToCalendar.vue';
+import IpoPortfolio from '../components/IpoPortfolio.vue';
 
 const authStore = useAuthStore();
 const ipoStore = useIpoStore();
+
+const activeView = ref('IpoList');
+
+function handleViewChange(viewName: string) {
+  activeView.value = viewName;
+}
+
 
 onMounted(() => {
   authStore.initialize();
 });
 
-// Fetch IPOs once the user is authenticated
 watch(() => authStore.isAuthenticated, (isAuth) => {
+  // Always fetch IPOs if the user is logged in, regardless of the view
+  if (true) {
     ipoStore.fetchIpos();
-}, { immediate: true });
+  }
+}, {immediate: true});
 </script>
 
 <template>
   <div class="popup-container">
-    <!-- The popup now directly renders the IpoList component. -->
-    <!-- It no longer needs to worry about loading or authentication states. -->
-    <IpoList />
+    <!--    <div v-if="authStore.isLoading" class="state-container">-->
+    <!--      <div class="spinner"></div>-->
+    <!--    </div>-->
+
+    <div class="main-view">
+      <TheHeader @viewChange="handleViewChange"/>
+
+      <IpoList v-show="activeView==='IpoList'"/>
+      <AddToCalendar v-show="activeView==='AddToCalendar'"/>
+      <IpoPortfolio v-show="activeView==='IpoPortfolio'"/>
+    </div>
   </div>
 </template>
 
-
 <style scoped>
 .popup-container {
-  padding: 4px;
   width: 380px;
   height: 600px;
-  background: rgba(10, 10, 11, 0.85);
+  background-color: #0F172A;
   color: #E4E4E7;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* This is a generic container for both Login and IpoList to live in */
-.popup-container > *:not(.state-container) {
-  flex: 1;
-  overflow: hidden;
-}
-
 .state-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  flex: 1;
 }
+
+.main-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content-body {
+  flex: 1;
+  overflow-y: auto; /* Allow content to scroll if it's too long */
+}
+
 .spinner {
   width: 32px;
   height: 32px;
@@ -60,5 +83,10 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>
