@@ -115,10 +115,11 @@ watch(activeTab, async () => {
 onMounted(() => {
 })
 
-function handleAddToCalendar(ipo){
+function handleAddToCalendar(ipo) {
 
 }
-function handleAddToPortfolio(ipo){
+
+function handleAddToPortfolio(ipo) {
 
 }
 </script>
@@ -143,14 +144,14 @@ function handleAddToPortfolio(ipo){
             No IPOs in this category.
           </div>
           <div v-else class="ipo-list">
-            <!-- This is the new structure for your .ipo-card div -->
-            <!-- This is the new structure for your .ipo-card div -->
             <div
                 class="ipo-card"
                 v-for="(ipo, index) in currentIpos"
                 :key="ipo.id"
                 :style="{ '--delay': `${index * 50}ms` }"
-                :class="{ 'is-closed': getIpoStatus(ipo).class === 'status--closed' }"
+                :class="{
+                'is-closed': getIpoStatus(ipo).class === 'status--closed',
+              }"
             >
               <div class="company-logo">{{ ipo.name.charAt(0) }}</div>
 
@@ -166,23 +167,19 @@ function handleAddToPortfolio(ipo){
 
               <!-- THE REFACTORED RIGHT-HAND SIDE -->
               <div class="ipo-actions-container">
-                <!-- The date/status is visible by default -->
-                <div class="ipo-status" :class="getIpoStatus(ipo).class">
-                  <span>{{ getIpoStatus(ipo).text }}</span>
-                  <svg v-if="activeTab !== 'pipeline'" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                       stroke-width="3" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-                  </svg>
+                <div class="ipo-status"
+                     :class="[getIpoStatus(ipo).class, { 'ipo-status--hideable': activeTab === 'thisWeek' }]">
+                  <span class="pr-2">{{ getIpoStatus(ipo).text }}</span>
                 </div>
 
-                <div class="actions-wrapper">
+                <div class="actions-wrapper" v-if="activeTab === 'thisWeek'">
                   <button class="action-button add-to-calendar" @click.stop="handleAddToCalendar(ipo)">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                          stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round"
                             d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0H21"/>
                     </svg>
-                    <span>
+                    <span class="action-button--text">
                       Add to Calendar
                     </span>
                   </button>
@@ -193,7 +190,7 @@ function handleAddToPortfolio(ipo){
                       <path stroke-linecap="round" stroke-linejoin="round"
                             d="M9 9.563C9 9.254 9.254 9 9.563 9h4.874c.309 0 .563.254.563.563v4.874c0 .309-.254.563-.563.563H9.563A.563.563 0 019 14.437V9.563z"/>
                     </svg>
-                    <span>
+                    <span class="action-button--text">
                       Add to Portfolio
                     </span>
                   </button>
@@ -210,13 +207,11 @@ function handleAddToPortfolio(ipo){
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- LAYOUT & TABS --- */
-.list-view-content {
+.list-view {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  font-family: 'Inter', sans-serif;
-  overflow: hidden;
 }
 
 .tabs {
@@ -283,18 +278,22 @@ function handleAddToPortfolio(ipo){
   padding: 16px;
   margin-bottom: 12px;
   border: 1px solid #27272A;
-  transition: all 150ms ease;
+  transition: border-color 200ms ease, background-color 200ms ease;
   cursor: pointer;
   animation: fade-in-up 0.5s both cubic-bezier(0.25, 0.46, 0.45, 0.94);
   animation-delay: var(--delay);
   display: flex;
   align-items: center;
   gap: 12px;
+  overflow: hidden;
+  transition-delay: 0ms, 0ms;
 }
 
 .ipo-card:hover {
   border-color: #3F3F46;
   background: #202023;
+  /* Slightly longer delay before showing actions */
+  transition-delay: 100ms, 100ms;
 }
 
 .ipo-card.is-closed {
@@ -304,6 +303,22 @@ function handleAddToPortfolio(ipo){
 
 .ipo-card.is-closed:hover {
   opacity: 0.7;
+}
+
+.ipo-card.is-non-interactive {
+  cursor: default;
+}
+
+/* When a card is non-interactive, disable the hover effects */
+.ipo-card.is-non-interactive:hover .actions-wrapper {
+  transform: scale(0.8);
+  opacity: 0;
+}
+
+.ipo-card.is-non-interactive:hover {
+  border-color: #27272A;
+  background: #18181B;
+  transition-delay: 0ms, 0ms;
 }
 
 .company-logo {
@@ -380,7 +395,6 @@ function handleAddToPortfolio(ipo){
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  border-radius: 50px;
 }
 
 .ipo-status {
@@ -396,7 +410,7 @@ function handleAddToPortfolio(ipo){
   font-weight: 500;
   font-size: 0.875rem;
   padding-right: 4px;
-  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  transition: opacity 250ms ease-out 150ms, transform 250ms ease-out 150ms;
 }
 
 .actions-wrapper {
@@ -412,18 +426,22 @@ function handleAddToPortfolio(ipo){
   border-radius: 8px;
   opacity: 0;
   transform: scale(0.8);
-  transition: opacity 200ms ease-in, transform 200ms ease-in;
+  /* Delayed entrance for smoother experience */
+  transition: opacity 200ms ease-in 150ms, transform 200ms ease-in 150ms;
   display: flex;
 }
 
-.ipo-actions-container:hover .ipo-status {
+/* Only trigger on parent card hover, with delay */
+.ipo-actions-container:hover .ipo-status--hidden {
   opacity: 0;
   transform: scale(0.8);
+  transition-delay: 0ms, 0ms;
 }
 
 .ipo-actions-container:hover .actions-wrapper {
   opacity: 1;
   transform: scale(1);
+  transition-delay: 100ms, 100ms;
 }
 
 .action-button {
@@ -436,30 +454,44 @@ function handleAddToPortfolio(ipo){
   border: none;
   color: #A1A1AA;
   cursor: pointer;
-  transition: all 150ms ease;
+  /* Specific transitions for button interactions */
+  transition: background-color 150ms ease, color 150ms ease, border-radius 150ms ease;
   gap: 8px;
 }
+
 .action-button:hover {
   background-color: #3F3F46;
   color: #FFFFFF;
 }
+
 .add-to-calendar:hover {
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
   color: #FFFFFF;
 }
+
 .add-to-portfolio:hover {
   border-top-right-radius: 8px;
   border-bottom-right-radius: 8px;
   color: #FFFFFF;
 }
+
 .action-button svg {
   width: 18px;
   height: 18px;
 }
+
+.action-button--text {
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .ipo-status svg {
   color: #52525B;
 }
+
 .status--ongoing {
   color: #34D399;
 }
@@ -483,15 +515,16 @@ function handleAddToPortfolio(ipo){
 
 /* --- ANIMATIONS & STATES --- */
 .ipo-list-wrapper {
-  transition: all 0.3s ease-in-out;
+  /* Specific transition for list wrapper instead of "all" */
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 .slide-left-enter-active, .slide-right-enter-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-left-leave-active, .slide-right-leave-active {
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-left-enter-from, .slide-right-leave-to {
@@ -562,5 +595,9 @@ function handleAddToPortfolio(ipo){
 
 .state-message.error {
   color: #F87171;
+}
+
+.pr-2 {
+  padding-right: 12px;
 }
 </style>
