@@ -6,11 +6,13 @@ const authStore = useAuthStore();
 
 <template>
   <div class="feature-view">
-    <div v-if="authStore.isAuthenticated">
+    <Login v-if="!authStore.isAuthenticated"/>
+
+    <div v-else>
       <h2>Hello from IPO Portfolio</h2>
-      <p>This is where the user's portfolio of tracked IPOs will be shown.</p>
+      <p>This is where the manual "IPO Portfolio" feature will live.</p>
     </div>
-    <Login v-else />
+
   </div>
 </template>
 

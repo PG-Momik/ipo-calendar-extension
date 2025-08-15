@@ -4,7 +4,7 @@ import {useAuthStore} from '../stores/auth';
 import {useIpoStore} from '../stores/ipos';
 import TheHeader from "../components/TheHeader.vue";
 import IpoList from '../components/IpoList.vue';
-import AddToCalendar from '../components/AddToCalendar.vue';
+import Calendar from '../components/Calendar.vue';
 import IpoPortfolio from '../components/IpoPortfolio.vue';
 
 const authStore = useAuthStore();
@@ -39,7 +39,7 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
       <TheHeader @viewChange="handleViewChange"/>
 
       <IpoList v-show="activeView==='IpoList'"/>
-      <AddToCalendar v-show="activeView==='AddToCalendar'"/>
+      <Calendar v-show="activeView==='Calendar'"/>
       <IpoPortfolio v-show="activeView==='IpoPortfolio'"/>
     </div>
   </div>

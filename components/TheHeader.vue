@@ -46,22 +46,38 @@ function changeView(viewName: string) {
         <Transition name="fade-scale">
           <div v-if="isSettingsOpen" class="settings-dropdown" ref="settingsMenu">
             <div class="dropdown-section-title">Features</div>
-            <!-- Buttons now call the changeView method -->
+
             <button @click="changeView('IpoList')" class="dropdown-item">
-              <span class="item-icon">📄</span>
               <span class="item-text">IPO List</span>
             </button>
-            <button @click="changeView('AddToCalendar')" class="dropdown-item">
-              <span class="item-icon">🗓️</span>
+
+            <button @click="changeView('Calendar')" class="dropdown-item">
               <span class="item-text">Add to Calendar</span>
+              <span v-if="!authStore.isAuthenticated" class="tooltip-trigger">
+                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                      d="M19 18.0039V17C19 15.8954 18.1046 15 17 15C15.8954 15 15 15.8954 15 17V18.0039M10 21H4C4 17.134 7.13401 14 11 14C11.3395 14 11.6734 14.0242 12 14.0709M15.5 21H18.5C18.9659 21 19.1989 21 19.3827 20.9239C19.6277 20.8224 19.8224 20.6277 19.9239 20.3827C20 20.1989 20 19.9659 20 19.5C20 19.0341 20 18.8011 19.9239 18.6173C19.8224 18.3723 19.6277 18.1776 19.3827 18.0761C19.1989 18 18.9659 18 18.5 18H15.5C15.0341 18 14.8011 18 14.6173 18.0761C14.3723 18.1776 14.1776 18.3723 14.0761 18.6173C14 18.8011 14 19.0341 14 19.5C14 19.9659 14 20.1989 14.0761 20.3827C14.1776 20.6277 14.3723 20.8224 14.6173 20.9239C14.8011 21 15.0341 21 15.5 21ZM15 7C15 9.20914 13.2091 11 11 11C8.79086 11 7 9.20914 7 7C7 4.79086 8.79086 3 11 3C13.2091 3 15 4.79086 15 7Z"
+                      stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="tooltip-text">Sign in to use this feature</span>
+              </span>
             </button>
+
             <button @click="changeView('IpoPortfolio')" class="dropdown-item">
-              <span class="item-icon">💼</span>
               <span class="item-text">IPO Portfolio</span>
+              <span v-if="!authStore.isAuthenticated" class="tooltip-trigger">
+                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                      d="M19 18.0039V17C19 15.8954 18.1046 15 17 15C15.8954 15 15 15.8954 15 17V18.0039M10 21H4C4 17.134 7.13401 14 11 14C11.3395 14 11.6734 14.0242 12 14.0709M15.5 21H18.5C18.9659 21 19.1989 21 19.3827 20.9239C19.6277 20.8224 19.8224 20.6277 19.9239 20.3827C20 20.1989 20 19.9659 20 19.5C20 19.0341 20 18.8011 19.9239 18.6173C19.8224 18.3723 19.6277 18.1776 19.3827 18.0761C19.1989 18 18.9659 18 18.5 18H15.5C15.0341 18 14.8011 18 14.6173 18.0761C14.3723 18.1776 14.1776 18.3723 14.0761 18.6173C14 18.8011 14 19.0341 14 19.5C14 19.9659 14 20.1989 14.0761 20.3827C14.1776 20.6277 14.3723 20.8224 14.6173 20.9239C14.8011 21 15.0341 21 15.5 21ZM15 7C15 9.20914 13.2091 11 11 11C8.79086 11 7 9.20914 7 7C7 4.79086 8.79086 3 11 3C13.2091 3 15 4.79086 15 7Z"
+                      stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="tooltip-text">Sign in to use this feature</span>
+              </span>
             </button>
+
             <div class="dropdown-divider"></div>
+
             <button @click="authStore.logout()" class="dropdown-item dropdown-item--logout">
-              <span class="item-icon">🚪</span>
               <span class="item-text">Logout</span>
             </button>
           </div>
@@ -76,7 +92,7 @@ function changeView(viewName: string) {
   background: none;
   border: none;
   width: 100%;
-  font-family: inherit; /* Ensure button inherits font */
+  font-family: inherit;
   cursor: pointer;
 }
 
@@ -113,25 +129,9 @@ function changeView(viewName: string) {
   margin-left: auto;
 }
 
-.signin-btn {
-  background-color: #2563EB;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 150ms ease;
-}
-
-.signin-btn:hover {
-  background-color: #1D4ED8;
-}
-
 .settings-btn {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: #71717A;
@@ -196,15 +196,7 @@ function changeView(viewName: string) {
 
 .item-text {
   flex-grow: 1;
-}
-
-.item-tag {
-  background-color: #3B82F6;
-  color: white;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
+  text-align: left;
 }
 
 .dropdown-divider {
@@ -221,6 +213,49 @@ function changeView(viewName: string) {
   background-color: rgba(239, 68, 68, 0.1);
 }
 
+.tooltip-trigger {
+  position: relative;
+  display: flex;
+  align-items: start;
+}
+
+.tooltip-trigger .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: fit-content;
+  background-color: #27272A;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  right: 50%;
+  transition: opacity 150ms ease;
+  font-size: 0.75rem;
+  font-weight: 400;
+  pointer-events: none; /* So it doesn't interfere with clicks */
+}
+
+/* Arrow for the tooltip */
+.tooltip-trigger .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #27272A transparent transparent transparent;
+}
+
+.tooltip-trigger:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Animation */
 .fade-scale-enter-active, .fade-scale-leave-active {
   transition: all 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

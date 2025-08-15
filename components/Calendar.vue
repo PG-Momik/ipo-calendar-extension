@@ -6,11 +6,13 @@ const authStore = useAuthStore();
 
 <template>
   <div class="feature-view">
-    <div v-if="authStore.isAuthenticated">
-      <h2>Hello from Add to Calendar</h2>
-      <p>This is where the manual "Add to Calendar" feature will live.</p>
+    <Login v-if="!authStore.isAuthenticated"/>
+
+    <div v-else>
+      <h2>Hello from Calendar</h2>
+      <p>This is where the manual "Calendar" feature will live.</p>
     </div>
-    <Login v-else />
+
   </div>
 </template>
 

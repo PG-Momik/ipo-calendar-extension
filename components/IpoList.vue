@@ -113,8 +113,14 @@ watch(activeTab, async () => {
 }, {immediate: true});
 
 onMounted(() => {
-  fet
 })
+
+function handleAddToCalendar(ipo){
+
+}
+function handleAddToPortfolio(ipo){
+
+}
 </script>
 
 <template>
@@ -169,7 +175,6 @@ onMounted(() => {
                   </svg>
                 </div>
 
-                <!-- The action buttons are hidden by default and appear on hover -->
                 <div class="actions-wrapper">
                   <button class="action-button add-to-calendar" @click.stop="handleAddToCalendar(ipo)">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
