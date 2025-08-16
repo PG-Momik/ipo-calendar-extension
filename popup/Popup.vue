@@ -6,41 +6,78 @@ import TheHeader from "../components/TheHeader.vue";
 import IpoList from '../components/IpoList.vue';
 import Calendar from '../components/Calendar.vue';
 import IpoPortfolio from '../components/IpoPortfolio.vue';
+import Toast from "../components/Toast.vue";
+import Login from "../components/Login.vue";
+import GoBack from "../components/GoBack.vue";
 
 const authStore = useAuthStore();
 const ipoStore = useIpoStore();
 
 const activeView = ref('IpoList');
 
+const toast = ref<{ message: string; type: 'success' | 'error' } | null>(null);
+
+function showToast(payload: { message: string; type: 'success' | 'error' }) {
+  console.log('came');
+  toast.value = {message: payload.message, type: payload.type};
+  setTimeout(() => {
+    toast.value = null;
+  }, 2000);
+  console.log('done');
+}
+
 function handleViewChange(viewName: string) {
   activeView.value = viewName;
 }
-
 
 onMounted(() => {
   authStore.initialize();
 });
 
-watch(() => authStore.isAuthenticated, (isAuth) => {
-  // Always fetch IPOs if the user is logged in, regardless of the view
-  if (true) {
-    ipoStore.fetchIpos();
-  }
+watch(() => authStore.isAuthenticated, () => {
+  ipoStore.fetchIpos(authStore.token ?? null);
 }, {immediate: true});
+
 </script>
 
 <template>
   <div class="popup-container">
-    <!--    <div v-if="authStore.isLoading" class="state-container">-->
-    <!--      <div class="spinner"></div>-->
-    <!--    </div>-->
-
     <div class="main-view">
-      <TheHeader @viewChange="handleViewChange"/>
+      <TheHeader
+          @viewChange="handleViewChange"
+          @showToast="showToast"
+      />
 
-      <IpoList v-show="activeView==='IpoList'"/>
-      <Calendar v-show="activeView==='Calendar'"/>
-      <IpoPortfolio v-show="activeView==='IpoPortfolio'"/>
+      <IpoList
+          v-show="activeView==='IpoList'"
+          @showToast="showToast"
+          @viewChange="handleViewChange"
+      />
+
+      <Calendar
+          v-show="activeView==='Calendar'"
+          @showToast="showToast"
+          @viewChange="handleViewChange"
+      />
+
+      <IpoPortfolio
+          v-show="activeView==='IpoPortfolio'"
+          @showToast="showToast"
+          @viewChange="handleViewChange"
+      />
+
+      <div class="login-wrapper">
+        <GoBack v-show="activeView==='Login'" @viewChange="handleViewChange" />
+        <Login v-show="activeView==='Login'" @viewChange="handleViewChange" />
+      </div>
+
+      <Transition name="toast-fade">
+        <Toast
+            v-if="toast"
+            :message="toast.message"
+            :type="toast.type"
+        />
+      </Transition>
     </div>
   </div>
 </template>
@@ -88,5 +125,20 @@ watch(() => authStore.isAuthenticated, (isAuth) => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+
+.login-wrapper{
+  padding: 16px;
 }
 </style>

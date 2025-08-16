@@ -8,7 +8,9 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   // The `plugins` array tells Vite how to process `.vue` files.
   // This is essential for any Vue project.
-  plugins: [vue()],
+  plugins: [
+      vue()
+  ],
 
   // The `define` block is the entire solution to the Vue feature flag warnings.
   // It globally injects these required constants during the build process, which

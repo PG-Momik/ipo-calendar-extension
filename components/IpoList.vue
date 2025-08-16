@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, watch} from 'vue';
-import {type Ipo, useIpoStore} from '../stores/ipos';
+import {computed, nextTick, ref, watch} from 'vue';
+import {useIpoStore} from '../stores/ipos';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isBetween from 'dayjs/plugin/isBetween';
 import IpoCard from "./IpoCard.vue";
+import {useAuthStore} from "../stores/auth";
 
 dayjs.extend(relativeTime);
 dayjs.extend(isBetween);
 
+const emit = defineEmits(['showToast']);
+
+const authStore = useAuthStore();
 const ipoStore = useIpoStore();
+
 const activeTab = ref<'thisWeek' | 'upcoming' | 'pipeline'>('thisWeek');
 const transitionDirection = ref('slide-left');
 const tabsContainer = ref<HTMLElement | null>(null);
@@ -22,7 +27,6 @@ const thisWeekIpos = computed(() => {
   // This one was correct: it uses startDate
   return ipoStore.ipos.filter(ipo => dayjs(ipo.startDate).isBefore(endOfWeek));
 });
-
 const upcomingIpos = computed(() => {
   const now = dayjs();
   const endOfWeek = now.endOf('week');
@@ -33,7 +37,6 @@ const upcomingIpos = computed(() => {
     return ipoStartDate.isAfter(endOfWeek) && ipoStartDate.isBefore(endOfNextMonth);
   });
 });
-
 const pipelineIpos = computed(() => {
   const now = dayjs();
   const endOfNextMonth = now.add(1, 'month').endOf('month');
@@ -43,7 +46,6 @@ const pipelineIpos = computed(() => {
     return ipoStartDate.isAfter(endOfNextMonth);
   });
 });
-
 const currentIpos = computed(() => {
   switch (activeTab.value) {
     case 'thisWeek':
@@ -56,38 +58,6 @@ const currentIpos = computed(() => {
       return [];
   }
 });
-
-function getIpoStatus(ipo: Ipo): { text: string; class: string } {
-  const now = dayjs();
-  const start = dayjs(ipo.startDate);
-  const end = dayjs(ipo.endDate);
-
-  if (activeTab.value === 'pipeline') {
-    return {text: 'Date: TBD', class: 'status--tbd'};
-  }
-  if (activeTab.value === 'upcoming') {
-    return {text: `${start.format('MMM D')} - ${end.format('D')}`, class: 'status--upcoming'};
-  }
-  if (now.isAfter(end)) {
-    return {text: 'Closed', class: 'status--closed'};
-  }
-  if (now.isBetween(start, end, null, '[]')) {
-    const daysRemaining = end.diff(now, 'day');
-    if (daysRemaining === 0) return {text: 'Closes Today', class: 'status--ongoing'};
-    return {text: `Closes in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}`, class: 'status--ongoing'};
-  }
-  if (start.isAfter(now)) {
-    if (start.isSame(now.add(1, 'day'), 'day')) return {text: 'Opens Tomorrow', class: 'status--soon'};
-    return {text: `Opens ${start.format('ddd')}`, class: 'status--soon'};
-  }
-  return {text: 'Status Unknown', class: 'status--tbd'};
-}
-
-function getTypeClass(type: Ipo['type']) {
-  if (type === 'FPO') return 'type-badge--fpo';
-  if (type === 'Mutual Fund') return 'type-badge--mutual';
-  return 'type-badge--ipo';
-}
 
 function switchTab(newTab: 'thisWeek' | 'upcoming' | 'pipeline') {
   const tabs = ['thisWeek', 'upcoming', 'pipeline'];
@@ -108,21 +78,58 @@ function updateIndicatorPosition() {
   }
 }
 
+async function handleAddToCalendar(ipo) {
+  if(!authStore.isAuthenticated){
+    redirectToLogin()
+
+    return;
+  }
+
+  const response = await ipoStore.addToCalendar(ipo.id, authStore.token);
+
+  emit('showToast', {
+    message: response.message,
+    type: response.status
+  });
+}
+
+async function handleAddToPortfolio(ipo) {
+  if(!authStore.isAuthenticated){
+    redirectToLogin()
+
+    return;
+  }
+
+  const response = await ipoStore.addToPortfolio(ipo.id, authStore.token, 10);
+
+  emit('showToast', {
+    message: response.message,
+    type: response.status
+  });
+}
+
+function redirectToLogin(){
+  emit('showToast', {
+    message: 'Login to use this feature.',
+    type: 'warning'
+  });
+
+  changeView('Login')
+
+  return;
+}
+
+function changeView(viewName: string) {
+  emit('viewChange', viewName);
+  isSettingsOpen.value = false;
+}
+
+
 watch(activeTab, async () => {
   await nextTick();
   updateIndicatorPosition();
 }, {immediate: true});
 
-onMounted(() => {
-})
-
-function handleAddToCalendar(ipo) {
-
-}
-
-function handleAddToPortfolio(ipo) {
-
-}
 </script>
 
 <template>
@@ -139,6 +146,7 @@ function handleAddToPortfolio(ipo) {
         <div class="loading-bar"></div>
       </div>
       <div v-else-if="ipoStore.error" class="state-message error">Could not load IPOs.</div>
+
       <Transition :name="transitionDirection" mode="out-in">
         <div :key="activeTab" class="ipo-list-wrapper">
           <div v-if="!currentIpos.length && !ipoStore.isLoading" class="state-message">
@@ -152,13 +160,16 @@ function handleAddToPortfolio(ipo) {
                 :ipo="ipo"
                 :active-tab="activeTab"
                 :index="index"
-                @add-to-calendar="handleAddToCalendar"
-                @add-to-portfolio="handleAddToPortfolio"
+                @add-to-calendar="handleAddToCalendar(ipo)"
+                @add-to-portfolio="handleAddToPortfolio(ipo)"
+                :can-add-to-calendar="ipo.canAddToCalendar"
+                :can-add-to-portfolio="ipo.canAddToPortfolio"
             />
           </div>
 
         </div>
       </Transition>
+
     </div>
   </div>
 </template>

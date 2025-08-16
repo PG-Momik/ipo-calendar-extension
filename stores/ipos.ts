@@ -1,9 +1,8 @@
-import { defineStore } from 'pinia';
+import {defineStore} from 'pinia';
+import {getAuthHeaders, handleApiResponse} from "../utils";
 
-// The URL of your Laravel backend API
 const API_URL = 'http://localhost:8000';
 
-// The TypeScript interface for a single IPO object
 export interface Ipo {
     id: number;
     name: string;
@@ -16,61 +15,99 @@ export interface Ipo {
     subscriptionStatus: string;
 }
 
+interface ApiResponse<T = any> {
+    status: 'success' | 'error' | 'warning';
+    message?: string;
+    data?: T;
+
+    [key: string]: any;
+}
+
 export const useIpoStore = defineStore('ipos', {
-    state: () => ({
-        ipos: [] as Ipo[],
-        isLoading: false,
-        error: null as string | null,
-        addStatus: {} as Record<number, 'adding' | 'success' | 'error'>,
-    }),
+    state: () => (
+        {
+            ipos: [] as Ipo[],
+            isLoading: false,
+            error: null as string | null,
+            addStatus: {} as Record<number, 'adding' | 'success' | 'error'>,
+        }
+    ),
 
     actions: {
-        /**
-         * Fetches the list of IPOs from the public backend API.
-         */
-        async fetchIpos() {
+        async fetchIpos(token: null | string)
+        {
             this.isLoading = true;
             this.error = null;
 
             try {
-                // Make the API call without any authentication headers
-                const response = await fetch(`${API_URL}/api/ipos`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                });
+                const response = await fetch(`${API_URL}/api/ipos`, {method: 'GET', headers: getAuthHeaders(token)});
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch IPO data from the server.');
-                }
+                const {data} = await handleApiResponse<Ipo[]>(response);
 
-                // Parse the full JSON response, which will be in the format { "data": [...] }.
-                const responseData = await response.json();
-
-                console.log(responseData)
-                this.ipos = responseData.data;
+                this.ipos = data || [];
             } catch (err: any) {
-                console.error('Error fetching IPOs:', err);
-                this.error = err.message || 'An unknown error occurred while fetching data.';
-                this.ipos = []; // Clear data on error to avoid showing stale info
+                this.error = err.message || 'Failed to load IPOs';
+                this.ipos = [];
             } finally {
                 this.isLoading = false;
             }
         },
 
-        /**
-         * Placeholder for adding an IPO to the calendar.
-         * This will require authentication to be re-enabled later.
-         */
-        async addToCalendar(ipoId: number) {
-            console.log(`'Add to Calendar' for IPO ${ipoId} clicked. Auth is currently disabled.`);
-            // In the future, this will make an authenticated API call.
-            // this.addStatus[ipoId] = 'adding';
-            // await new Promise(resolve => setTimeout(resolve, 1000));
-            // this.addStatus[ipoId] = 'success';
-            // setTimeout(() => { delete this.addStatus[ipoId]; }, 3000);
+        async addToCalendar(ipoId: number, token: string): Promise<{ status: 'success' | 'error' | 'warning', message: string }>
+        {
+            this.addStatus[ipoId] = 'adding';
+
+            try {
+                const response = await fetch(`${API_URL}/api/ipo/${ipoId}/add-to-calendar`, {
+                    method: 'POST', headers: getAuthHeaders(token)
+                });
+
+                const {status, message} = await handleApiResponse(response);
+
+                this.addStatus[ipoId] = status;
+
+                await this.fetchIpos();
+                // on successful api call i need to refresh the store since one of the flags uould have changed
+                return {status, message};
+            } catch (error: any) {
+                this.addStatus[ipoId] = 'error';
+
+                if (Object.hasOwn(error, 'status') && Object.hasOwn(error, 'message')) {
+                    return {
+                        status: error.status, message: error.message
+                    };
+                }
+
+                return {
+                    status: 'error', message: error.message || 'Failed to add to calendar'
+                };
+            }
         },
+
+        async addToPortfolio(ipoId: number, token: string, units: number): Promise<{ status: 'success' | 'error', message: string }>
+        {
+            try {
+                const response = await fetch(`${API_URL}/api/ipo/${ipoId}/add-to-portfolio`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(token)
+                });
+
+                const {status, message} = await handleApiResponse(response);
+
+                await this.fetchIpos();
+                return {status, message};
+            } catch (error: any) {
+
+                if (Object.hasOwn(error, 'status') && Object.hasOwn(error, 'message')) {
+                    return {
+                        status: error.status, message: error.message
+                    };
+                }
+
+                return {
+                    status: 'error', message: error.message || 'Failed to add to portfolio'
+                };
+            }
+        }
     },
 });

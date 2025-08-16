@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from 'vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import isBetween from 'dayjs/plugin/isBetween'
-import type { Ipo } from '../stores/ipos'
+import type {Ipo} from '../stores/ipos'
 
 dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
@@ -12,6 +12,8 @@ const props = defineProps<{
   ipo: Ipo
   activeTab: 'thisWeek' | 'upcoming' | 'pipeline'
   index: number
+  canAddToCalendar: true
+  canAddToPortfolio: true
 }>()
 
 const emit = defineEmits<{
@@ -25,31 +27,36 @@ function getIpoStatus(ipo: Ipo): { text: string; class: string } {
   const end = dayjs(ipo.endDate)
 
   if (props.activeTab === 'pipeline') {
-    return { text: 'Date: TBD', class: 'status--tbd' }
+    return {text: 'Date: TBD', class: 'status--tbd'}
   }
   if (props.activeTab === 'upcoming') {
-    return { text: `${start.format('MMM D')} - ${end.format('D')}`, class: 'status--upcoming' }
+    return {text: `${start.format('MMM D')} - ${end.format('D')}`, class: 'status--upcoming'}
   }
   if (now.isAfter(end)) {
-    return { text: 'Closed', class: 'status--closed' }
+    return {text: 'Closed', class: 'status--closed'}
   }
   if (now.isBetween(start, end, null, '[]')) {
     const daysRemaining = end.diff(now, 'day')
-    if (daysRemaining === 0) return { text: 'Closes Today', class: 'status--ongoing' }
-    return { text: `Closes in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}`, class: 'status--ongoing' }
+    if (daysRemaining === 0) return {text: 'Closes Today', class: 'status--ongoing'}
+    return {text: `Closes in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}`, class: 'status--ongoing'}
   }
   if (start.isAfter(now)) {
-    if (start.isSame(now.add(1, 'day'), 'day')) return { text: 'Opens Tomorrow', class: 'status--soon' }
-    return { text: `Opens ${start.format('ddd')}`, class: 'status--soon' }
+    if (start.isSame(now.add(1, 'day'), 'day'))
+      return {text: 'Opens Tomorrow', class: 'status--soon'}
+    return {text: `Opens ${start.format('ddd')}`, class: 'status--soon'}
   }
-  return { text: 'Status Unknown', class: 'status--tbd' }
+
+  return {text: 'Status Unknown', class: 'status--tbd'}
 }
 
 function getTypeClass(type: Ipo['type']) {
   if (type === 'FPO') return 'type-badge--fpo'
   if (type === 'Mutual Fund') return 'type-badge--mutual'
+
   return 'type-badge--ipo'
 }
+
+const showOverlay = computed(()=>props.activeTab === 'thisWeek' && (props.canAddToCalendar || props.canAddToPortfolio));
 
 const ipoStatus = computed(() => getIpoStatus(props.ipo))
 </script>
@@ -74,25 +81,28 @@ const ipoStatus = computed(() => getIpoStatus(props.ipo))
 
     <div class="ipo-actions-container">
       <div class="ipo-status"
-           :class="[ipoStatus.class, { 'ipo-status--hideable': activeTab === 'thisWeek' }]">
+           :class="[ipoStatus.class, { 'ipo-status--hideable': !showOverlay }]">
         <span class="pr-2">{{ ipoStatus.text }}</span>
       </div>
 
-      <div class="actions-wrapper" v-if="activeTab === 'thisWeek'">
-        <button class="action-button add-to-calendar" @click.stop="emit('add-to-calendar', ipo)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-               stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0H21"/>
+      <div class="actions-wrapper" v-show="showOverlay">
+        <button v-if="canAddToCalendar"
+                class="action-button add-to-calendar"
+                :class="{ 'radius-reset': !canAddToPortfolio }"
+                @click.stop="emit('add-to-calendar', ipo)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0H21"/>
           </svg>
           <span class="action-button--text">Add to Calendar</span>
         </button>
-        <button class="action-button add-to-portfolio" @click.stop="emit('add-to-portfolio', ipo)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-               stroke="currentColor">
+
+        <button v-if="canAddToPortfolio"
+                class="action-button add-to-portfolio"
+                :class="{ 'radius-reset': !canAddToCalendar }"
+                @click.stop="emit('add-to-portfolio', ipo)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 9.563C9 9.254 9.254 9 9.563 9h4.874c.309 0 .563.254.563.563v4.874c0 .309-.254.563-.563.563H9.563A.563.563 0 019 14.437V9.563z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.254 9.254 9 9.563 9h4.874c.309 0 .563.254.563.563v4.874c0 .309-.254.563-.563.563H9.563A.563.563 0 019 14.437V9.563z"/>
           </svg>
           <span class="action-button--text">Add to Portfolio</span>
         </button>
@@ -141,7 +151,6 @@ const ipoStatus = computed(() => getIpoStatus(props.ipo))
   cursor: default;
 }
 
-/* When a card is non-interactive, disable the hover effects */
 .ipo-card.is-non-interactive:hover .actions-wrapper {
   transform: scale(0.8);
   opacity: 0;
@@ -263,7 +272,6 @@ const ipoStatus = computed(() => getIpoStatus(props.ipo))
   display: flex;
 }
 
-/* Only trigger on parent card hover, with delay */
 .ipo-actions-container:hover .ipo-status--hidden {
   opacity: 0;
   transform: scale(0.8);
@@ -352,5 +360,13 @@ const ipoStatus = computed(() => getIpoStatus(props.ipo))
 
 .pr-2 {
   padding-right: 12px;
+}
+
+.radius-reset {
+  border-radius: unset !important;
+}
+
+.radius-reset:hover {
+  border-radius: unset !important;
 }
 </style>
