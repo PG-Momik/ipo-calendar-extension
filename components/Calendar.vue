@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import {computed, onMounted} from 'vue';
-import {useCalendarStore} from '../stores/calendar';
+import { computed, onMounted, ref } from 'vue';
+import { useCalendarStore } from '../stores/calendar';
 import dayjs from 'dayjs';
 import 'v-calendar/style.css';
-import {Calendar as VCalendar} from 'v-calendar';
+import { Calendar as VCalendar } from 'v-calendar';
+import ConfirmModal from './ConfirmModal.vue';
 
 const calendarStore = useCalendarStore();
+
+const isModalVisible = ref(false);
+const ipoToRemove = ref<number | null>(null);
 
 onMounted(() => {
   calendarStore.fetchTrackedIpos();
@@ -13,26 +17,31 @@ onMounted(() => {
 
 const calendarAttributes = computed(() => {
   const colors = ['blue', 'purple', 'green', 'orange', 'red', 'teal'];
-
   return calendarStore.trackedIpos.map((ipo, index) => ({
     key: ipo.id,
-    bar: {
-      color: colors[index % colors.length],
-    },
-    dates: {
-      start: new Date(ipo.startDate),
-      end: new Date(ipo.endDate),
-    },
-    popover: {
-      label: ipo.name,
-      visibility: 'hover',
-    },
+    bar: { color: colors[index % colors.length] },
+    dates: { start: new Date(ipo.startDate), end: new Date(ipo.endDate) },
+    popover: { label: ipo.name, visibility: 'hover' },
   }));
 });
 
-async function handleRemove(ipoId: number) {
-  await calendarStore.removeFromCalendar(ipoId);
+function promptRemove(ipoId: number) {
+  ipoToRemove.value = ipoId;
+  isModalVisible.value = true;
 }
+
+async function confirmRemove() {
+  if (ipoToRemove.value !== null) {
+    await calendarStore.removeFromCalendar(ipoToRemove.value);
+  }
+  closeModal();
+}
+
+function closeModal() {
+  isModalVisible.value = false;
+  ipoToRemove.value = null;
+}
+
 </script>
 
 <template>
@@ -64,7 +73,8 @@ async function handleRemove(ipoId: number) {
                   dayjs(ipo.endDate).format('D')
                 }}</span>
             </div>
-            <button @click="handleRemove(ipo.id)" class="remove-btn" title="Remove from Calendar">
+
+            <button @click="promptRemove(ipo.id)" class="remove-btn" title="Remove from Calendar">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                    stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -75,6 +85,16 @@ async function handleRemove(ipoId: number) {
         </ul>
       </div>
     </div>
+
+    <!-- 4. RENDER THE MODAL -->
+    <ConfirmModal
+        v-if="isModalVisible"
+        title="Confirm Removal"
+        message="Are you sure you want to remove this IPO from your calendar? This will also delete the event from your Google Calendar."
+        confirmText="Yes, Remove"
+        @confirm="confirmRemove"
+        @cancel="closeModal"
+    />
   </div>
 </template>
 
@@ -110,6 +130,11 @@ async function handleRemove(ipoId: number) {
   --vc-popover-content-color: #E4E4E7;
   --vc-popover-caret-bg: #27272A;
   --vc-bar-height: 22px;
+}
+
+:deep(.vc-title){
+  background: #E4E4E7;
+  color: rgba(10, 10, 11, 0.85);
 }
 
 :deep(.vc-arrow) {
