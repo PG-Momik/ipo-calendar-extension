@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue';
+import {computed, h, onMounted, ref, watch} from 'vue';
 import {useAuthStore} from '../stores/auth';
 import {useIpoStore} from '../stores/ipos';
 import TheHeader from "../components/TheHeader.vue";
@@ -38,6 +38,18 @@ watch(() => authStore.isAuthenticated, () => {
   ipoStore.fetchIpos(authStore.token ?? null);
 }, {immediate: true});
 
+const currentComponent = computed(() => {
+  const components = {
+    'IpoList': IpoList,
+    'Calendar': Calendar,
+    'IpoPortfolio': IpoPortfolio,
+    'Login': () => h('div', { class: 'login-wrapper' }, [
+      h(GoBack, { onViewChange: handleViewChange }),
+      h(Login, { onViewChange: handleViewChange })
+    ])
+  };
+  return components[activeView.value] || IpoList;
+});
 </script>
 
 <template>
@@ -48,28 +60,14 @@ watch(() => authStore.isAuthenticated, () => {
           @showToast="showToast"
       />
 
-      <IpoList
-          v-show="activeView==='IpoList'"
-          @showToast="showToast"
-          @viewChange="handleViewChange"
-      />
-
-      <Calendar
-          v-show="activeView==='Calendar'"
-          @showToast="showToast"
-          @viewChange="handleViewChange"
-      />
-
-      <IpoPortfolio
-          v-show="activeView==='IpoPortfolio'"
-          @showToast="showToast"
-          @viewChange="handleViewChange"
-      />
-
-      <div class="login-wrapper">
-        <GoBack v-show="activeView==='Login'" @viewChange="handleViewChange" />
-        <Login v-show="activeView==='Login'" @viewChange="handleViewChange" />
-      </div>
+      <Transition name="fade-slide" mode="out-in">
+        <component
+            :is="currentComponent"
+            :key="activeView"
+            @showToast="showToast"
+            @viewChange="handleViewChange"
+        />
+      </Transition>
 
       <Transition name="toast-fade">
         <Toast
@@ -88,9 +86,18 @@ watch(() => authStore.isAuthenticated, () => {
   height: 600px;
   background: rgba(10, 10, 11, 0.85);
   color: #E4E4E7;
-  overflow: hidden;
+  overflow: hidden; /* This is key */
   display: flex;
   flex-direction: column;
+}
+
+/* This container ensures the header and list fill the available space */
+.main-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* NEW: Prevent this container from shrinking and allow its children to overflow */
+  min-height: 0;
 }
 
 .state-container {
@@ -109,7 +116,7 @@ watch(() => authStore.isAuthenticated, () => {
 
 .content-body {
   flex: 1;
-  overflow-y: auto; /* Allow content to scroll if it's too long */
+  overflow-y: auto;
 }
 
 .spinner {
@@ -138,7 +145,22 @@ watch(() => authStore.isAuthenticated, () => {
   transform: translateX(-50%) translateY(20px);
 }
 
-.login-wrapper{
+.login-wrapper {
   padding: 16px;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 </style>
