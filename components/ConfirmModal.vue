@@ -1,22 +1,42 @@
 <script setup lang="ts">
-const emit = defineEmits(['confirm', 'cancel']);
-defineProps({
+import {ref, watch} from 'vue';
+
+const props = defineProps({
+  show: Boolean,
   title: String,
   message: String,
-  confirmText: { type: String, default: 'Confirm' },
-  cancelText: { type: String, default: 'Cancel' },
+  confirmText: {type: String, default: 'Confirm'},
+  cancelText: {type: String, default: 'Cancel'},
 });
+
+const emit = defineEmits(['confirm', 'cancel']);
+
+const isVisible = ref(false);
+
+watch(() => props.show, (newValue) => {
+  isVisible.value = newValue;
+}, {immediate: true});
+
+function handleConfirm() {
+  emit('confirm');
+}
+
+function handleCancel() {
+  // Same for cancel.
+  emit('cancel');
+}
 </script>
 
 <template>
+  <!-- The transition now watches our internal `isVisible` state -->
   <Transition name="modal-fade">
-    <div class="modal-backdrop" @click.self="emit('cancel')">
+    <div v-if="isVisible" class="modal-backdrop" @click.self="handleCancel">
       <div class="modal-content">
         <h3 class="modal-title">{{ title }}</h3>
         <p class="modal-message">{{ message }}</p>
         <div class="modal-actions">
-          <button @click="emit('cancel')" class="btn btn--secondary">{{ cancelText }}</button>
-          <button @click="emit('confirm')" class="btn btn--danger">{{ confirmText }}</button>
+          <button @click="handleCancel" class="btn btn--secondary">{{ cancelText }}</button>
+          <button @click="handleConfirm" class="btn btn--danger">{{ confirmText }}</button>
         </div>
       </div>
     </div>
@@ -74,21 +94,54 @@ defineProps({
   cursor: pointer;
   transition: all 150ms ease;
 }
-.btn:hover { transform: translateY(-1px); }
+
+.btn:hover {
+  transform: translateY(-1px);
+}
 
 .btn--secondary {
   background-color: #3F3F46;
   color: #E4E4E7;
 }
-.btn--secondary:hover { background-color: #52525B; }
+
+.btn--secondary:hover {
+  background-color: #52525B;
+}
 
 .btn--danger {
   background-color: #DC2626;
   color: white;
 }
-.btn--danger:hover { background-color: #B91C1C; }
+
+.btn--danger:hover {
+  background-color: #B91C1C;
+}
 
 /* Modal animation */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 200ms ease;
+}
+
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+  transition: transform 200ms ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+  transform: scale(0.95);
+}
+
+.modal-backdrop { /* ... */ }
+.modal-content { /* ... */ }
+
+/* Ensure the fade out animation is defined */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 200ms ease;
@@ -104,6 +157,6 @@ defineProps({
 }
 .modal-fade-enter-from .modal-content,
 .modal-fade-leave-to .modal-content {
-  transform: scale(0.95);
+  transform: translateY(10px) scale(0.98);
 }
 </style>

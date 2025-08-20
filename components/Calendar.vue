@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import {computed, onMounted, ref, watch} from 'vue';
 import { useCalendarStore } from '../stores/calendar';
 import dayjs from 'dayjs';
 import 'v-calendar/style.css';
@@ -12,10 +12,19 @@ const calendarStore = useCalendarStore();
 
 const isModalVisible = ref(false);
 const ipoToRemove = ref<number | null>(null);
+const removingIpoId = ref<number | null>(null);
 
 onMounted(() => {
-  authStore.initialize();
-  calendarStore.fetchTrackedIpos(authStore.token);
+  if (authStore.isAuthenticated) {
+    calendarStore.fetchTrackedIpos();
+  } else {
+    const unwatch = watch(() => authStore.isAuthenticated, (isAuth) => {
+      if (isAuth) {
+        calendarStore.fetchTrackedIpos();
+        unwatch();
+      }
+    });
+  }
 });
 
 const calendarAttributes = computed(() => {
@@ -29,22 +38,25 @@ const calendarAttributes = computed(() => {
 });
 
 function promptRemove(ipoId: number) {
+  if (removingIpoId.value !== null) return;
   ipoToRemove.value = ipoId;
   isModalVisible.value = true;
 }
 
 async function confirmRemove() {
+  isModalVisible.value = false;
+
   if (ipoToRemove.value !== null) {
-    await calendarStore.removeFromCalendar(ipoToRemove.value);
+    removingIpoId.value = ipoToRemove.value;
+    await calendarStore.removeFromCalendar(removingIpoId.value);
+    removingIpoId.value = null;
   }
-  closeModal();
 }
 
 function closeModal() {
   isModalVisible.value = false;
   ipoToRemove.value = null;
 }
-
 </script>
 
 <template>
@@ -65,10 +77,12 @@ function closeModal() {
 
       <div class="tracked-list">
         <h3 class="list-title">IPOs in Your Calendar</h3>
+
         <div v-if="calendarStore.trackedIpos.length === 0" class="empty-list">
           No IPOs added to your calendar yet.
         </div>
-        <ul v-else class="item-list-scroll-wrapper">
+
+        <TransitionGroup v-else tag="ul" name="list-fade" class="item-list-scroll-wrapper">
           <li v-for="ipo in calendarStore.trackedIpos" :key="ipo.id" class="tracked-item">
             <div class="item-info">
               <span class="item-name">{{ ipo.name }}</span>
@@ -77,18 +91,25 @@ function closeModal() {
               </span>
             </div>
 
-            <button @click="promptRemove(ipo.id)" class="remove-btn" title="Remove from Calendar">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <button
+                @click="promptRemove(ipo.id)"
+                class="remove-btn"
+                :disabled="removingIpoId === ipo.id"
+                title="Remove from Calendar"
+            >
+              <div v-if="removingIpoId === ipo.id" class="spinner-small"></div>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
               </svg>
             </button>
           </li>
-        </ul>
+        </TransitionGroup>
+
       </div>
     </div>
 
     <ConfirmModal
-        v-if="isModalVisible"
+        :show="isModalVisible"
         title="Confirm Removal"
         message="Are you sure you want to remove this IPO from your calendar? This will also delete the event from your Google Calendar."
         confirmText="Yes, Remove"
@@ -274,6 +295,12 @@ function closeModal() {
   cursor: pointer;
   transition: all 150ms ease;
   flex-shrink: 0;
+  position: relative;
+}
+
+.remove-btn:disabled {
+  cursor: wait;
+  background-color: #3F3F46;
 }
 
 .remove-btn:hover {
@@ -287,6 +314,16 @@ function closeModal() {
   height: 16px;
 }
 
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #F87171; /* Red spinner */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .state-message {
   padding: 48px;
   text-align: center;
@@ -295,5 +332,22 @@ function closeModal() {
 
 .state-message.error {
   color: #F87171;
+}
+
+.list-fade-move,
+.list-fade-enter-active,
+.list-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.list-fade-enter-from,
+.list-fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0.01) translate(30px, 0);
+}
+
+/* This ensures the layout doesn't jump when an item is removed */
+.list-fade-leave-active {
+  position: absolute;
 }
 </style>
