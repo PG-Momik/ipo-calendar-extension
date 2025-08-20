@@ -58,7 +58,7 @@ export const useIpoStore = defineStore('ipos', {
             this.addStatus[ipoId] = 'adding';
 
             try {
-                const response = await fetch(`${API_URL}/api/ipo/${ipoId}/add-to-calendar`, {
+                const response = await fetch(`${API_URL}/api/user/tracked-ipos/${ipoId}`, {
                     method: 'POST', headers: getAuthHeaders(token)
                 });
 
@@ -87,7 +87,7 @@ export const useIpoStore = defineStore('ipos', {
         async addToPortfolio(ipoId: number, token: string, units: number): Promise<{ status: 'success' | 'error', message: string }>
         {
             try {
-                const response = await fetch(`${API_URL}/api/ipo/${ipoId}/add-to-portfolio`, {
+                const response = await fetch(`$${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
                     method: 'POST',
                     headers: getAuthHeaders(token)
                 });

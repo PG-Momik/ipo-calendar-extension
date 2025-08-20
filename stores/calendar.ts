@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth';
-import type { Ipo } from './ipos'; // We can reuse the Ipo interface
+import type { Ipo } from './ipos';
+import {getAuthHeaders} from "../utils";
+import {useIpoStore} from "./ipos"; // We can reuse the Ipo interface
 
 const API_URL = 'http://localhost:8000';
 
@@ -17,9 +19,10 @@ export const useCalendarStore = defineStore('calendar', {
 
             this.isLoading = true;
             this.error = null;
+
             try {
                 const response = await fetch(`${API_URL}/api/user/tracked-ipos`, {
-                    headers: { 'Authorization': `Bearer ${authStore.token}` }
+                  headers: getAuthHeaders(authStore.token)
                 });
                 if (!response.ok) throw new Error('Failed to fetch tracked IPOs.');
 
@@ -37,24 +40,20 @@ export const useCalendarStore = defineStore('calendar', {
             const authStore = useAuthStore();
             if (!authStore.isAuthenticated || !authStore.token) return;
 
-            // Optimistic UI: remove from the list immediately
-            const originalIpos = [...this.trackedIpos];
-            this.trackedIpos = this.trackedIpos.filter(ipo => ipo.id !== ipoId);
-
             try {
-                const response = await fetch(`${API_URL}/api/tracked-ipo/${ipoId}`, {
+                const response = await fetch(`${API_URL}/api/user/tracked-ipos/${ipoId}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${authStore.token}` },
+                    headers: getAuthHeaders(authStore.token),
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to remove from calendar on the server.');
                 }
 
-                // We can also trigger a toast from here if we emit an event
+                this.trackedIpos = this.trackedIpos.filter(ipo => ipo.id !== ipoId);
+
                 return { success: true, message: 'Successfully removed.' };
             } catch (err: any) {
-                // If the API call fails, revert the change
                 this.trackedIpos = originalIpos;
                 console.error(err);
                 return { success: false, message: err.message };
