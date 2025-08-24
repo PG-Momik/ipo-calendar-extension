@@ -138,9 +138,6 @@ function handleCancel() {
   transform: scale(0.95);
 }
 
-.modal-backdrop { /* ... */ }
-.modal-content { /* ... */ }
-
 /* Ensure the fade out animation is defined */
 .modal-fade-enter-active,
 .modal-fade-leave-active {

@@ -87,7 +87,7 @@ export const useIpoStore = defineStore('ipos', {
         async addToPortfolio(ipoId: number, token: string, units: number): Promise<{ status: 'success' | 'error', message: string }>
         {
             try {
-                const response = await fetch(`$${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
                     method: 'POST',
                     headers: getAuthHeaders(token)
                 });
