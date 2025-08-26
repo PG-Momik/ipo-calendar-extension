@@ -54,7 +54,6 @@ export const useCalendarStore = defineStore('calendar', {
 
                 return { success: true, message: 'Successfully removed.' };
             } catch (err: any) {
-                this.trackedIpos = originalIpos;
                 console.error(err);
                 return { success: false, message: err.message };
             }

@@ -243,8 +243,6 @@ watch(activeTab, async () => {
 
 
 /* --- ANIMATIONS & STATES --- */
-
-
 .slide-left-enter-active, .slide-right-enter-active {
   transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

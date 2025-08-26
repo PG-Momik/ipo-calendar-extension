@@ -1,12 +1,44 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth';
+import {getAuthHeaders} from "../utils";
 
 const API_URL = 'http://localhost:8000';
 
-// Define types for the data structures
-interface PortfolioSummary { /* ... */ }
-interface ChartData { /* ... */ }
-interface Holding { /* ... */ }
+/**
+ * Defines the structure for the summary KPIs at the top of the portfolio view.
+ * All values are numbers, ready for formatting in the component.
+ */
+export interface PortfolioSummary {
+    totalInvestment: number;
+    totalCurrentValue: number;
+    totalGainLoss: number;
+    totalGainLossPercentage: number;
+}
+
+/**
+ * Defines the structure for the data needed by the ApexCharts components.
+ */
+export interface ChartData {
+    labels: string[]; // e.g., ['Hydro', 'Com. Bank', 'Investment']
+    values: number[]; // e.g., [15000, 25000, 8000]
+}
+
+/**
+ * Defines the structure for a single IPO holding within the user's portfolio.
+ * This is used for the detailed list at the bottom of the view.
+ */
+export interface Holding {
+    id: number;
+    name: string;
+    ticker: string;
+    sector: string;
+    unitsAllotted: number;
+    purchasePrice: number;
+    purchaseDate: string;
+    createdAt: string;
+    investmentValue: number;
+    currentValue: number;
+}
 
 export const usePortfolioStore = defineStore('portfolio', {
     state: () => ({
@@ -25,9 +57,8 @@ export const usePortfolioStore = defineStore('portfolio', {
             this.error = null;
             try {
                 const response = await fetch(`${API_URL}/api/user/portfolio-ipos`, {
-                    headers: { 'Authorization': `Bearer ${authStore.token}` },
+                    headers: getAuthHeaders(authStore.token),
                 });
-                // ---------------------------------------------
 
                 if (!response.ok) throw new Error('Failed to fetch portfolio data.');
 
@@ -62,10 +93,33 @@ export const usePortfolioStore = defineStore('portfolio', {
 
                 if (!response.ok) throw new Error('Failed to update portfolio entry.');
 
-                // After a successful update, refresh the data to get new calculations.
                 await this.fetchPortfolio();
 
                 return { success: true, message: 'Portfolio updated successfully.' };
+            } catch (err: any) {
+                console.error(err);
+
+                return { success: false, message: err.message };
+            }
+        },
+
+        async removeFromPortfolio(ipoId: number) {
+            const authStore = useAuthStore();
+            if (!authStore.isAuthenticated || !authStore.token) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(authStore.token),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to remove from calendar on the server.');
+                }
+
+                this.holdings = this.holdings.filter(ipo => ipo.id !== ipoId);
+
+                return { success: true, message: 'Successfully removed.' };
             } catch (err: any) {
                 console.error(err);
                 return { success: false, message: err.message };

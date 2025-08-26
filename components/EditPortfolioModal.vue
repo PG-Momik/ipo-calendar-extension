@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, defineProps, defineEmits } from 'vue';
 import type { Holding } from '../stores/portfolio';
+import dayjs from 'dayjs';
 
 const props = defineProps<{
   show: boolean,
@@ -12,15 +13,31 @@ const emit = defineEmits(['close', 'save']);
 const formData = ref({
   units_allotted: 10,
   purchase_price: 100,
+  purchase_date: '',
 });
+
 
 // When the modal is shown, populate the form with the holding's data
 onMounted(() => {
+  console.log('props.holding');
+  console.log(props.holding);
   if (props.holding) {
     formData.value.units_allotted = props.holding.unitsAllotted;
     formData.value.purchase_price = props.holding.purchasePrice;
+    formData.value.purchase_date = dayjs(props.holding.purchaseDate).format('YYYY-MM-DD');
+    console.log('mounted');
+    console.log('formData.value');
+    console.log(props.holding);
   }
 });
+watch(() => props.holding, (newHolding) => {
+  console.log('Holding prop changed. Updating form...');
+  if (newHolding) {
+    formData.value.units_allotted = newHolding.unitsAllotted;
+    formData.value.purchase_price = newHolding.purchasePrice;
+    formData.value.purchase_date = dayjs(newHolding.purchaseDate).format('YYYY-MM-DD');
+  }
+}, { immediate: true });
 
 function handleSave() {
   if (props.holding) {
@@ -41,9 +58,15 @@ function handleSave() {
 
         <form @submit.prevent="handleSave" class="edit-form">
           <div class="form-group">
+            <label for="purchase-date">Purchase Date</label>
+            <input type="date" id="purchase-date" v-model="formData.purchase_date" />
+          </div>
+
+          <div class="form-group">
             <label for="units">Units Allotted</label>
             <input type="number" id="units" v-model.number="formData.units_allotted" />
           </div>
+
           <div class="form-group">
             <label for="price">Purchase Price (per unit)</label>
             <input type="number" step="0.01" id="price" v-model.number="formData.purchase_price" />
@@ -60,6 +83,18 @@ function handleSave() {
 </template>
 
 <style scoped>
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Styles for the modal, form, and inputs */
 .modal-backdrop {   position: fixed;
   inset: 0;

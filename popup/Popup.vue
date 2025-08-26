@@ -86,7 +86,7 @@ const currentComponent = computed(() => {
   height: 600px;
   background: rgba(10, 10, 11, 0.85);
   color: #E4E4E7;
-  overflow: hidden; /* This is key */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -96,7 +96,6 @@ const currentComponent = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* NEW: Prevent this container from shrinking and allow its children to overflow */
   min-height: 0;
 }
 
