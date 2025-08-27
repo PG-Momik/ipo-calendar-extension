@@ -18,12 +18,9 @@ const activeView = ref('IpoList');
 const toast = ref<{ message: string; type: 'success' | 'error' } | null>(null);
 
 function showToast(payload: { message: string; type: 'success' | 'error' }) {
-  console.log('came');
   toast.value = {message: payload.message, type: payload.type};
-  setTimeout(() => {
-    toast.value = null;
-  }, 2000);
-  console.log('done');
+
+  setTimeout(() => { toast.value = null; }, 2000);
 }
 
 function handleViewChange(viewName: string) {

@@ -3,7 +3,6 @@ const emit = defineEmits(['viewChange']);
 
 function changeView(viewName: string) {
   emit('viewChange', viewName);
-  isSettingsOpen.value = false;
 }
 </script>
 

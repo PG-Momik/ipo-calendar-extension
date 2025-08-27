@@ -17,21 +17,14 @@ const formData = ref({
 });
 
 
-// When the modal is shown, populate the form with the holding's data
 onMounted(() => {
-  console.log('props.holding');
-  console.log(props.holding);
   if (props.holding) {
     formData.value.units_allotted = props.holding.unitsAllotted;
     formData.value.purchase_price = props.holding.purchasePrice;
     formData.value.purchase_date = dayjs(props.holding.purchaseDate).format('YYYY-MM-DD');
-    console.log('mounted');
-    console.log('formData.value');
-    console.log(props.holding);
   }
 });
 watch(() => props.holding, (newHolding) => {
-  console.log('Holding prop changed. Updating form...');
   if (newHolding) {
     formData.value.units_allotted = newHolding.unitsAllotted;
     formData.value.purchase_price = newHolding.purchasePrice;

@@ -66,7 +66,7 @@ export const useIpoStore = defineStore('ipos', {
 
                 this.addStatus[ipoId] = status;
 
-                await this.fetchIpos();
+                await this.fetchIpos(token);
                 // on successful api call i need to refresh the store since one of the flags uould have changed
                 return {status, message};
             } catch (error: any) {
@@ -94,7 +94,8 @@ export const useIpoStore = defineStore('ipos', {
 
                 const {status, message} = await handleApiResponse(response);
 
-                await this.fetchIpos();
+                await this.fetchIpos(token);
+
                 return {status, message};
             } catch (error: any) {
 

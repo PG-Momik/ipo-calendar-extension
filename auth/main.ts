@@ -10,7 +10,6 @@ if (typeof window !== 'undefined') {
 
   if (token) {
     storage.local.set({ authToken: token }).then(() => {
-      console.log('Token saved. Closing tab.');
       window.close();
     });
   } else {

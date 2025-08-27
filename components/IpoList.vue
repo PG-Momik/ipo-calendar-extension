@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {computed, nextTick, ref, watch} from 'vue';
-import {useIpoStore} from '../stores/ipos';
 import dayjs from 'dayjs';
+import IpoCard from "./IpoCard.vue";
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isBetween from 'dayjs/plugin/isBetween';
-import IpoCard from "./IpoCard.vue";
 import {useAuthStore} from "../stores/auth";
+import {useIpoStore} from '../stores/ipos';
 
 dayjs.extend(relativeTime);
 dayjs.extend(isBetween);
@@ -20,19 +20,18 @@ const transitionDirection = ref('slide-left');
 const tabsContainer = ref<HTMLElement | null>(null);
 const activeTabIndicator = ref<HTMLElement | null>(null);
 
-// --- CORRECTED COMPUTED PROPERTIES ---
 const thisWeekIpos = computed(() => {
   const now = dayjs();
   const endOfWeek = now.endOf('week');
-  // This one was correct: it uses startDate
+
   return ipoStore.ipos.filter(ipo => dayjs(ipo.startDate).isBefore(endOfWeek));
 });
 const upcomingIpos = computed(() => {
   const now = dayjs();
   const endOfWeek = now.endOf('week');
   const endOfNextMonth = now.add(1, 'month').endOf('month');
+
   return ipoStore.ipos.filter(ipo => {
-    // BUG FIX: Changed ipo.ipo_date to ipo.startDate
     const ipoStartDate = dayjs(ipo.startDate);
     return ipoStartDate.isAfter(endOfWeek) && ipoStartDate.isBefore(endOfNextMonth);
   });
@@ -40,8 +39,8 @@ const upcomingIpos = computed(() => {
 const pipelineIpos = computed(() => {
   const now = dayjs();
   const endOfNextMonth = now.add(1, 'month').endOf('month');
+
   return ipoStore.ipos.filter(ipo => {
-    // BUG FIX: Changed ipo.ipo_date to ipo.startDate
     const ipoStartDate = dayjs(ipo.startDate);
     return ipoStartDate.isAfter(endOfNextMonth);
   });
@@ -121,7 +120,6 @@ function redirectToLogin(){
 
 function changeView(viewName: string) {
   emit('viewChange', viewName);
-  isSettingsOpen.value = false;
 }
 
 

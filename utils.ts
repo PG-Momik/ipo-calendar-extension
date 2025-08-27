@@ -3,9 +3,6 @@ export function getAuthHeaders(token?: string): HeadersInit {
         'Accept': 'application/json',
     };
 
-    console.log('token')
-    console.log(token)
-
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
