@@ -53,13 +53,16 @@ export const useIpoStore = defineStore('ipos', {
             }
         },
 
-        async addToCalendar(ipoId: number, token: string): Promise<{ status: 'success' | 'error' | 'warning', message: string }>
+        async addToCalendar(ipoId: number, token: string, shouldCreateGoogleEvent: boolean): Promise<{ status: 'success' | 'error' | 'warning', message: string }>
         {
             this.addStatus[ipoId] = 'adding';
 
             try {
                 const response = await fetch(`${API_URL}/api/user/tracked-ipos/${ipoId}`, {
-                    method: 'POST', headers: getAuthHeaders(token)
+                    method: 'POST', headers: getAuthHeaders(token),
+                    body: JSON.stringify({
+                        'create_google_event': shouldCreateGoogleEvent
+                    })
                 });
 
                 const {status, message} = await handleApiResponse(response);
@@ -67,7 +70,7 @@ export const useIpoStore = defineStore('ipos', {
                 this.addStatus[ipoId] = status;
 
                 await this.fetchIpos(token);
-                // on successful api call i need to refresh the store since one of the flags uould have changed
+
                 return {status, message};
             } catch (error: any) {
                 this.addStatus[ipoId] = 'error';
@@ -84,7 +87,7 @@ export const useIpoStore = defineStore('ipos', {
             }
         },
 
-        async addToPortfolio(ipoId: number, token: string, units: number): Promise<{ status: 'success' | 'error', message: string }>
+        async addToPortfolio(ipoId: number, token: string): Promise<{ status: 'success' | 'error', message: string }>
         {
             try {
                 const response = await fetch(`${API_URL}/api/user/portfolio-ipos/${ipoId}`, {

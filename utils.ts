@@ -1,6 +1,7 @@
-export function getAuthHeaders(token?: string): HeadersInit {
+export function getAuthHeaders(token?: string | null): HeadersInit {
     const headers: HeadersInit = {
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
     };
 
     if (token) {
@@ -9,7 +10,6 @@ export function getAuthHeaders(token?: string): HeadersInit {
 
     return headers;
 }
-
 
 export async function handleApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
     const json = (await response.json()) as ApiResponse<T>;

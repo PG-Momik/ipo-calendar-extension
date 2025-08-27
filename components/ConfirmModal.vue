@@ -22,18 +22,19 @@ function handleConfirm() {
 }
 
 function handleCancel() {
-  // Same for cancel.
   emit('cancel');
 }
 </script>
 
 <template>
-  <!-- The transition now watches our internal `isVisible` state -->
   <Transition name="modal-fade">
     <div v-if="isVisible" class="modal-backdrop" @click.self="handleCancel">
       <div class="modal-content">
         <h3 class="modal-title">{{ title }}</h3>
         <p class="modal-message">{{ message }}</p>
+
+        <slot name="extra-options"></slot>
+
         <div class="modal-actions">
           <button @click="handleCancel" class="btn btn--secondary">{{ cancelText }}</button>
           <button @click="handleConfirm" class="btn btn--danger">{{ confirmText }}</button>

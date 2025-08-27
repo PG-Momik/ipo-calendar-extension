@@ -5,7 +5,8 @@ import IpoCard from "./IpoCard.vue";
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isBetween from 'dayjs/plugin/isBetween';
 import {useAuthStore} from "../stores/auth";
-import {useIpoStore} from '../stores/ipos';
+import {Ipo, useIpoStore} from '../stores/ipos';
+import ConfirmModal from "./ConfirmModal.vue";
 
 dayjs.extend(relativeTime);
 dayjs.extend(isBetween);
@@ -16,9 +17,21 @@ const authStore = useAuthStore();
 const ipoStore = useIpoStore();
 
 const activeTab = ref<'thisWeek' | 'upcoming' | 'pipeline'>('thisWeek');
+
 const transitionDirection = ref('slide-left');
 const tabsContainer = ref<HTMLElement | null>(null);
 const activeTabIndicator = ref<HTMLElement | null>(null);
+
+const calendarModal = ref({
+  isVisible: false,
+  withGoogleEvent: true,
+});
+const portfolioModal = ref({
+  isVisible: false,
+});
+
+const selectedIpo = ref<Ipo | null>(null);
+const loadingIpoId = ref<number | null>(null);
 
 const thisWeekIpos = computed(() => {
   const now = dayjs();
@@ -77,34 +90,53 @@ function updateIndicatorPosition() {
   }
 }
 
-async function handleAddToCalendar(ipo) {
-  if(!authStore.isAuthenticated){
+function handleAddToCalendar(ipo: Ipo) {
+  console.log('eta');
+  console.log(authStore);
+  if (!authStore.isAuthenticated) {
     redirectToLogin()
-
     return;
   }
 
-  const response = await ipoStore.addToCalendar(ipo.id, authStore.token);
-
-  emit('showToast', {
-    message: response.message,
-    type: response.status
-  });
+  selectedIpo.value = ipo;
+  calendarModal.value.isVisible = true;
 }
 
-async function handleAddToPortfolio(ipo) {
-  if(!authStore.isAuthenticated){
-    redirectToLogin()
+async function confirmAddToCalendar() {
+  if (!selectedIpo.value) return;
 
+  const ipoToProcess = selectedIpo.value;
+  const shouldCreateGoogleEvent = calendarModal.value.withGoogleEvent;
+
+  calendarModal.value.isVisible = false;
+  loadingIpoId.value = ipoToProcess.id;
+
+  const response = await ipoStore.addToCalendar(ipoToProcess.id, authStore.token, shouldCreateGoogleEvent);
+  emit('showToast', { message: response.message, type: response.status });
+
+  loadingIpoId.value = null;
+}
+
+function handleAddToPortfolio(ipo: Ipo) {
+  if (!authStore.isAuthenticated) {
+    redirectToLogin()
     return;
   }
+  selectedIpo.value = ipo;
+  portfolioModal.value.isVisible = true;
+}
 
-  const response = await ipoStore.addToPortfolio(ipo.id, authStore.token, 10);
+async function confirmAddToPortfolio() {
+  if (!selectedIpo.value) return;
 
-  emit('showToast', {
-    message: response.message,
-    type: response.status
-  });
+  const ipoToProcess = selectedIpo.value;
+  portfolioModal.value.isVisible = false;
+  loadingIpoId.value = ipoToProcess.id;
+
+  const response = await ipoStore.addToPortfolio(ipoToProcess.id, authStore.token);
+  emit('showToast', { message: response.message, type: response.status });
+
+  loadingIpoId.value = null;
 }
 
 function redirectToLogin(){
@@ -121,7 +153,6 @@ function redirectToLogin(){
 function changeView(viewName: string) {
   emit('viewChange', viewName);
 }
-
 
 watch(activeTab, async () => {
   await nextTick();
@@ -143,6 +174,7 @@ watch(activeTab, async () => {
       <div v-if="ipoStore.isLoading" class="loading-bar-container">
         <div class="loading-bar"></div>
       </div>
+
       <div v-else-if="ipoStore.error" class="state-message error">Could not load IPOs.</div>
 
       <Transition :name="transitionDirection" mode="out-in">
@@ -158,10 +190,9 @@ watch(activeTab, async () => {
                 :ipo="ipo"
                 :active-tab="activeTab"
                 :index="index"
+                :is-loading="loadingIpoId === ipo.id"
                 @add-to-calendar="handleAddToCalendar(ipo)"
                 @add-to-portfolio="handleAddToPortfolio(ipo)"
-                :can-add-to-calendar="ipo.canAddToCalendar"
-                :can-add-to-portfolio="ipo.canAddToPortfolio"
             />
           </div>
 
@@ -169,6 +200,31 @@ watch(activeTab, async () => {
       </Transition>
 
     </div>
+
+    <ConfirmModal
+        :show="calendarModal.isVisible"
+        title="Add to Your Calendar?"
+        message="This will track the IPO in your list and can optionally create an event in your Google Calendar."
+        confirmText="Continue"
+        @confirm="confirmAddToCalendar"
+        @cancel="calendarModal.isVisible = false"
+    >
+      <template #extra-options>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="google-event-checkbox" v-model="calendarModal.withGoogleEvent">
+          <label for="google-event-checkbox">Also create Google Calendar event</label>
+        </div>
+      </template>
+    </ConfirmModal>
+
+    <ConfirmModal
+        :show="portfolioModal.isVisible"
+        title="Add to Portfolio?"
+        message="This will add the IPO to your portfolio with a default of 10 units at the issue price. You can edit this later."
+        confirmText="Continue"
+        @confirm="confirmAddToPortfolio"
+        @cancel="portfolioModal.isVisible = false"
+    />
   </div>
 </template>
 
@@ -319,5 +375,25 @@ watch(activeTab, async () => {
   color: #F87171;
 }
 
+.checkbox-wrapper {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-top: 1px solid #27272A;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#google-event-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #3B82F6;
+}
+.checkbox-wrapper label {
+  font-size: 0.875rem;
+  color: #A1A1AA;
+  cursor: pointer;
+}
 
 </style>
