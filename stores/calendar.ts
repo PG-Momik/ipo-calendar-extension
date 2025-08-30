@@ -1,10 +1,8 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth';
 import type { Ipo } from './ipos';
-import {getAuthHeaders} from "../utils";
-import {useIpoStore} from "./ipos"; // We can reuse the Ipo interface
-
-const API_URL = 'http://localhost:8000';
+import {getAuthHeaders, config} from "../utils";
+import {useIpoStore} from "./ipos"; 
 
 export const useCalendarStore = defineStore('calendar', {
     state: () => ({
@@ -21,7 +19,7 @@ export const useCalendarStore = defineStore('calendar', {
             this.error = null;
 
             try {
-                const response = await fetch(`${API_URL}/api/user/tracked-ipos`, {
+                const response = await fetch(`${config.api.baseUrl}/api/user/tracked-ipos`, {
                   headers: getAuthHeaders(authStore.token)
                 });
                 if (!response.ok) throw new Error('Failed to fetch tracked IPOs.');
@@ -41,7 +39,7 @@ export const useCalendarStore = defineStore('calendar', {
             if (!authStore.isAuthenticated || !authStore.token) return;
 
             try {
-                const response = await fetch(`${API_URL}/api/user/tracked-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/api/user/tracked-ipos/${ipoId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders(authStore.token),
                 });

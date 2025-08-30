@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "ipo-notifier-extension",
+  "name": "ipo-calendar-extension",
   "description": "A simple chrome extension built with Extension.js and Vue.",
   "version": "0.0.1",
   "author": {

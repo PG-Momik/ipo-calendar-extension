@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
-
-const API_URL = 'http://localhost:8000'
+import { config } from '../utils'
 
 export const usePreferenceStore = defineStore('preferences', {
   state: () => ({
@@ -23,7 +22,7 @@ export const usePreferenceStore = defineStore('preferences', {
       this.successMessage = ''
 
       try {
-        const response = await fetch(`${API_URL}/api/user/preferences`, {
+        const response = await fetch(`${config.api.baseUrl}/api/user/preferences`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authStore.token}`,

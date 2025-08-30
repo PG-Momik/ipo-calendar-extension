@@ -54,15 +54,6 @@ function changeView(viewName: string) {
 
 <template>
   <header class="header">
-    <div class="logo">
-      <div class="logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="15" width="4" height="6" rx="1" fill="#FFFFFF"/>
-          <rect x="10" y="10" width="4" height="11" rx="1" fill="#FFFFFF"/>
-          <rect x="17" y="3" width="4" height="18" rx="1" fill="#FFFFFF"/>
-        </svg>
-      </div>
-    </div>
     <h1 class="title">IPO Calendar</h1>
 
     <div class="settings-container">
@@ -149,7 +140,7 @@ function changeView(viewName: string) {
   font-weight: 600;
   font-size: 1rem;
   color: #E4E4E7;
-  margin-left: 12px;
+
 }
 
 .settings-container {

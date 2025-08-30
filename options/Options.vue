@@ -35,8 +35,8 @@ function handleSaveChanges() {
 <template>
   <div class="options-container">
     <header class="options-header">
-      <img src="/images/icon_48.png" alt="IPO Notifier Logo" class="logo">
-      <h1>IPO Notifier — Settings</h1>
+      <img src="/images/icon_48.png" alt="IPO Calendar Logo" class="logo">
+      <h1>IPO Calendar — Settings</h1>
     </header>
 
     <main v-if="authStore.isLoading" class="loading-state">

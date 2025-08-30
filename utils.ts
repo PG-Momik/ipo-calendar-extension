@@ -1,3 +1,14 @@
+
+// Environment configuration
+export const config = {
+  api: {
+    baseUrl: 'http://localhost:8000',
+  },
+  oauth: {
+    redirectUrl: 'http://localhost:8000/auth/google/redirect',
+  },
+} as const;
+
 export function getAuthHeaders(token?: string | null): HeadersInit {
     const headers: HeadersInit = {
         'Accept': 'application/json',

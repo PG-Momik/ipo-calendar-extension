@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth';
-import {getAuthHeaders} from "../utils";
-
-const API_URL = 'http://localhost:8000';
+import {getAuthHeaders, config} from "../utils";
 
 /**
  * Defines the structure for the summary KPIs at the top of the portfolio view.
@@ -56,7 +54,7 @@ export const usePortfolioStore = defineStore('portfolio', {
             this.isLoading = true;
             this.error = null;
             try {
-                const response = await fetch(`${API_URL}/api/user/portfolio-ipos`, {
+                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos`, {
                     headers: getAuthHeaders(authStore.token),
                 });
 
@@ -81,14 +79,10 @@ export const usePortfolioStore = defineStore('portfolio', {
             if (!authStore.isAuthenticated) return { success: false, message: 'Not authenticated.'};
 
             try {
-                const response = await fetch(`${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos/${ipoId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${authStore.token}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
+                    headers: getAuthHeaders(authStore.token),
+                    body: JSON.stringify(data)
                 });
 
                 if (!response.ok) throw new Error('Failed to update portfolio entry.');
@@ -108,7 +102,7 @@ export const usePortfolioStore = defineStore('portfolio', {
             if (!authStore.isAuthenticated || !authStore.token) return;
 
             try {
-                const response = await fetch(`${API_URL}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos/${ipoId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders(authStore.token),
                 });

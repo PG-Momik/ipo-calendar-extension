@@ -25,6 +25,13 @@ export default defineConfig({
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(false),
   },
 
+  // Environment variable replacement for manifest.json
+  build: {
+    rollupOptions: {
+      external: [],
+    },
+  },
+
   // By explicitly NOT including a `build` property, we allow the `extension.js`
   // toolkit to use its own internal `build.rollupOptions` and `build.outDir`
   // configurations. This prevents conflicts and ensures the extension is

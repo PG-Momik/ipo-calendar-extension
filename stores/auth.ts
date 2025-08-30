@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { storage } from 'webextension-polyfill'
-
-// Define this at the top for easy configuration
-const API_URL = 'http://localhost:8000'
+import { config } from '../utils'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -30,30 +28,39 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return
 
       try {
-        const response = await fetch(`${API_URL}/api/user`, {
+        const response = await fetch(`${config.api.baseUrl}/api/user`, {
           headers: {
             'Authorization': `Bearer ${this.token}`,
             'Accept': 'application/json',
           },
         })
 
-        if (!response.ok) throw new Error('Auth failed')
-
-        this.user = await response.json()
-        this.isAuthenticated = true
+        if (response.ok) {
+          const data = await response.json()
+          this.user = data.user
+          this.isAuthenticated = true
+        } else {
+          // Token might be invalid, clear it
+          await storage.local.remove('authToken')
+          this.token = null
+          this.user = null
+          this.isAuthenticated = false
+        }
       } catch (error) {
-        console.error('Failed to fetch user, logging out.', error)
-
-        await this.logout()
+        console.error('Failed to fetch user:', error)
+        // Clear invalid token
+        await storage.local.remove('authToken')
+        this.token = null
+        this.user = null
+        this.isAuthenticated = false
       }
-
     },
 
     async handleLogin() {
       this.isLoading = true;
 
       try {
-        const authUrl = `${API_URL}/auth/google/redirect`;
+        const authUrl = config.oauth.redirectUrl;
 
         const finalRedirectUrl = await chrome.identity.launchWebAuthFlow({
           url: authUrl,
@@ -85,19 +92,11 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       this.isLoading = true
-
-      if (this.token) {
-        await fetch(`${API_URL}/api/logout`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${this.token}` },
-        })
-      }
-
       await storage.local.remove('authToken')
       this.token = null
       this.user = null
       this.isAuthenticated = false
       this.isLoading = false
-    },
-  },
+    }
+  }
 })
