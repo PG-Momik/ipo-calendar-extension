@@ -28,10 +28,6 @@ const authStore = useAuthStore();
         </span>
       </button>
     </div>
-
-    <div class="login-content__footer">
-      <p>By signing in, you agree to our Terms of Service & Privacy Policy.</p>
-    </div>
   </div>
 </template>
 
@@ -112,15 +108,4 @@ const authStore = useAuthStore();
 .loading-text .dot:nth-child(2) { animation-delay: 0.2s; }
 .loading-text .dot:nth-child(3) { animation-delay: 0.4s; }
 @keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
-
-.login-content__footer {
-  margin-top: auto;
-}
-
-.login-content__footer p {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.75rem;
-  color: #64748B;
-  line-height: 1.5;
-}
 </style>

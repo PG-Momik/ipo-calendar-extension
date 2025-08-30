@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, nextTick, ref, watch} from 'vue';
+import {computed, nextTick, onMounted, ref, watch} from 'vue';
 import dayjs from 'dayjs';
 import IpoCard from "./IpoCard.vue";
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -154,6 +154,10 @@ function changeView(viewName: string) {
   emit('viewChange', viewName);
 }
 
+onMounted(() => {
+  updateIndicatorPosition();
+});
+
 watch(activeTab, async () => {
   await nextTick();
   updateIndicatorPosition();
@@ -295,7 +299,6 @@ watch(activeTab, async () => {
   padding-top: 16px;
 }
 
-
 /* --- ANIMATIONS & STATES --- */
 .slide-left-enter-active, .slide-right-enter-active {
   transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -385,11 +388,13 @@ watch(activeTab, async () => {
   align-items: center;
   gap: 12px;
 }
+
 #google-event-checkbox {
   width: 16px;
   height: 16px;
   accent-color: #3B82F6;
 }
+
 .checkbox-wrapper label {
   font-size: 0.875rem;
   color: #A1A1AA;

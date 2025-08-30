@@ -97,7 +97,6 @@ function handleSaveChanges() {
 </template>
 
 <style scoped>
-/* A professional, clean stylesheet for the options page */
 .options-container {
   max-width: 600px;
   margin: 2rem auto;

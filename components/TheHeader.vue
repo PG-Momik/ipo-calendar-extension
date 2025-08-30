@@ -7,7 +7,7 @@ const authStore = useAuthStore();
 const isSettingsOpen = ref(false);
 const settingsMenu = ref(null);
 
-const emit = defineEmits(['viewChange', 'showToast']);
+const emit = defineEmits(['viewChange', 'showToast', 'logout']);
 
 onClickOutside(settingsMenu, () => {
   isSettingsOpen.value = false;
@@ -50,11 +50,16 @@ function changeView(viewName: string) {
   isSettingsOpen.value = false;
 }
 
+function handleLogout() {
+  isSettingsOpen.value = false;
+  emit('logout');
+}
+
 </script>
 
 <template>
   <header class="header">
-    <h1 class="title">IPO Calendar</h1>
+    <h1 class="title" @click="changeView('IpoList')">IPO Calendar</h1>
 
     <div class="settings-container">
       <div>
@@ -96,7 +101,7 @@ function changeView(viewName: string) {
 
             <div class="dropdown-divider"></div>
 
-            <button @click="authStore.logout()" class="dropdown-item dropdown-item--logout">
+            <button @click="handleLogout" class="dropdown-item dropdown-item--logout">
               <span class="item-text">Logout</span>
             </button>
           </div>
@@ -140,7 +145,10 @@ function changeView(viewName: string) {
   font-weight: 600;
   font-size: 1rem;
   color: #E4E4E7;
+}
 
+.title:hover {
+  cursor: pointer;
 }
 
 .settings-container {
