@@ -73,7 +73,7 @@ function handleLogout() {
 
         <Transition name="fade-scale">
           <div v-if="isSettingsOpen" class="settings-dropdown" ref="settingsMenu">
-            <div class="dropdown-section-title">Features</div>
+            <div class="dropdown-section-title">Menu</div>
 
             <button type="button" @click="handleIpoListMenuItemClick" class="dropdown-item">
               <span class="item-text">IPO List</span>

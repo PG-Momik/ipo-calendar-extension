@@ -27,6 +27,16 @@ function handleViewChange(viewName: string) {
   activeView.value = viewName;
 }
 
+async function handleLogout() {
+  if(authStore.isAuthenticated){
+    await authStore.logout();
+
+    activeView.value = 'IpoList';
+
+    showToast({ message: "You've been logged out.", type: 'success' });
+  }
+}
+
 onMounted(() => {
   authStore.initialize();
 });
@@ -55,6 +65,7 @@ const currentComponent = computed(() => {
       <TheHeader
           @viewChange="handleViewChange"
           @showToast="showToast"
+          @logout="handleLogout"
       />
 
       <Transition name="fade-slide" mode="out-in">
