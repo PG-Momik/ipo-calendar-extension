@@ -13,6 +13,9 @@ onClickOutside(settingsMenu, () => {
   isSettingsOpen.value = false;
 });
 
+function handlePreferencesMenuItemClick(){
+  changeView('Preferences');
+}
 function handleIpoListMenuItemClick(){
   changeView('IpoList');
 }
@@ -79,6 +82,9 @@ function handleLogout() {
               <span class="item-text">IPO List</span>
             </button>
 
+            <button type="button" @click="handlePreferencesMenuItemClick" class="dropdown-item">
+              <span class="item-text">Preferences</span>
+            </button>
             <button type="button" @click="handleCalendarMenuItemClick" class="dropdown-item">
               <span class="item-text">Calendar</span>
               <span v-if="!authStore.isAuthenticated" class="tooltip-trigger">

@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { storage } from 'webextension-polyfill'
-import { config } from '../utils'
+import { defineStore } from 'pinia';
+import { storage } from 'webextension-polyfill';
+import {getAuthHeaders, config} from "../utils";
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -10,8 +10,23 @@ export const useAuthStore = defineStore('auth', {
     isLoading: true,
   }),
 
-  // Actions are methods that can mutate the state
   actions: {
+    listenForAuthChanges() {
+      storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.authToken) {
+          const newToken = changes.authToken.newValue;
+          if (newToken) {
+            this.token = newToken;
+            this.fetchUser();
+          } else {
+            this.token = null;
+            this.user = null;
+            this.isAuthenticated = false;
+          }
+        }
+      });
+    },
+
     async initialize() {
       this.isLoading = true
       const { authToken } = await storage.local.get('authToken')
@@ -29,10 +44,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const response = await fetch(`${config.api.baseUrl}/api/user`, {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/json',
-          },
+          headers: getAuthHeaders(this.token)
         })
 
         if (response.ok) {
@@ -40,7 +52,6 @@ export const useAuthStore = defineStore('auth', {
           this.user = data.user
           this.isAuthenticated = true
         } else {
-          // Token might be invalid, clear it
           await storage.local.remove('authToken')
           this.token = null
           this.user = null
@@ -48,7 +59,7 @@ export const useAuthStore = defineStore('auth', {
         }
       } catch (error) {
         console.error('Failed to fetch user:', error)
-        // Clear invalid token
+
         await storage.local.remove('authToken')
         this.token = null
         this.user = null
@@ -91,12 +102,24 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      this.isLoading = true
-      await storage.local.remove('authToken')
-      this.token = null
-      this.user = null
-      this.isAuthenticated = false
-      this.isLoading = false
-    }
+      this.isLoading = true;
+      const tokenToRevoke = this.token;
+
+      if (tokenToRevoke) {
+        try {
+          await fetch(`${config.api.baseUrl}/api/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders(tokenToRevoke)
+          });
+
+          console.log('Successfully logged out on the backend.');
+        } catch (error) {
+          console.error('Network error during backend logout:', error);
+        }
+      }
+
+      await storage.local.remove('authToken');
+      this.isLoading = false;
+    },
   }
 })

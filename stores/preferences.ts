@@ -1,56 +1,74 @@
-import { defineStore } from 'pinia'
-import { useAuthStore } from './auth'
-import { config } from '../utils'
+import {defineStore} from 'pinia';
+import {useAuthStore} from './auth';
+import {getAuthHeaders, config} from "../utils";
+
+export interface UserPreferences {
+    visible_ipo_types: string[];
+    visible_sectors: string[];
+    visible_share_types: string[];
+}
 
 export const usePreferenceStore = defineStore('preferences', {
-  state: () => ({
-    isSaving: false,
-    error: null as string | null,
-    successMessage: '' as string,
-  }),
+    state: () => ({
+        current: null as UserPreferences | null, options: {
+            ipoTypes: ['IPO', 'FPO', 'Mutual Fund', 'Right Share', 'Auction', 'Bond'],
+            sectors: ['Hydro', 'Com. Bank', 'Microfinance', 'Insurance', 'Manu & Prod', 'Investment', 'Finance', 'Tourism', 'Others'],
+            shareTypes: ['ordinary', 'local', 'promoter', 'Migrant Workers'],
+        }, isLoading: false, error: null as string | null,
+    }), actions: {
+        /**
+         * Fetches preferences. Works for both guests and authenticated users.
+         */
+        async fetchPreferences() {
+            const authStore = useAuthStore();
+            this.isLoading = true;
+            this.error = null;
+            try {
+                const response = await fetch(`${config.api.baseUrl}/api/preferences`, {
+                    headers: getAuthHeaders(authStore.token)
+                });
 
-  actions: {
-    async savePreferences(prefs: { enable_browser_notifications: boolean; auto_add_to_calendar: boolean }) {
-      const authStore = useAuthStore()
-      if (!authStore.token) {
-        this.error = 'You are not authenticated.'
-        return
-      }
+                if (!response.ok) throw new Error('Could not load preferences.');
 
-      this.isSaving = true
-      this.error = null
-      this.successMessage = ''
+                this.current = await response.json();
 
-      try {
-        const response = await fetch(`${config.api.baseUrl}/api/user/preferences`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(prefs),
-        })
+            } catch (err: any) {
+                this.error = err.message;
+            } finally {
+                this.isLoading = false;
+            }
+        },
 
-        if (!response.ok) {
-          throw new Error('Failed to save preferences.')
-        }
+        /**
+         * Saves the user's preferences to the backend. Requires authentication.
+         */
+        async savePreferences(newPreferences: UserPreferences) {
+            const authStore = useAuthStore();
+            if (!authStore.isAuthenticated || !authStore.token) {
+                return {success: false, message: 'You must be logged in to save.'};
+            }
 
-        // Update the user object in the authStore with the new preferences
-        const data = await response.json()
-        if (authStore.user) {
-          authStore.user.preferences = data.preferences
-        }
-        
-        this.successMessage = 'Settings saved successfully!'
+            this.isLoading = true;
+            this.error = null;
+            try {
+                const response = await fetch(`${config.api.baseUrl}/api/preferences`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(authStore.token),
+                    body: JSON.stringify(newPreferences),
+                });
 
-      } catch (err: any) {
-        this.error = err.message || 'An unknown error occurred.'
-      } finally {
-        this.isSaving = false
-        // Clear success message after a few seconds
-        setTimeout(() => { this.successMessage = '' }, 3000)
-      }
+                if (!response.ok) throw new Error('Failed to save preferences.');
+
+                const result = await response.json();
+                this.current = result.preferences;
+                return {success: true, message: result.message};
+
+            } catch (err: any) {
+                this.error = err.message;
+                return {success: false, message: err.message};
+            } finally {
+                this.isLoading = false;
+            }
+        },
     },
-  },
-})
+});

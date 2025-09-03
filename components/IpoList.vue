@@ -75,26 +75,31 @@ function switchTab(newTab: 'thisWeek' | 'upcoming' | 'pipeline') {
   const tabs = ['thisWeek', 'upcoming', 'pipeline'];
   const currentIndex = tabs.indexOf(activeTab.value);
   const newIndex = tabs.indexOf(newTab);
+
   transitionDirection.value = newIndex > currentIndex ? 'slide-left' : 'slide-right';
   activeTab.value = newTab;
 }
 
 function updateIndicatorPosition() {
-  if (!tabsContainer.value || !activeTabIndicator.value) return;
+  if (!tabsContainer.value || !activeTabIndicator.value) {
+    return;
+  }
+
   const activeTabElement = tabsContainer.value.querySelector('button.active') as HTMLElement;
+
   if (activeTabElement) {
     const containerRect = tabsContainer.value.getBoundingClientRect();
     const activeRect = activeTabElement.getBoundingClientRect();
+
     activeTabIndicator.value.style.width = `${activeRect.width}px`;
     activeTabIndicator.value.style.transform = `translateX(${activeRect.left - containerRect.left}px)`;
   }
 }
 
 function handleAddToCalendar(ipo: Ipo) {
-  console.log('eta');
-  console.log(authStore);
   if (!authStore.isAuthenticated) {
     redirectToLogin()
+
     return;
   }
 

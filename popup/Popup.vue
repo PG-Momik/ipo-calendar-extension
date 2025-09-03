@@ -3,6 +3,7 @@ import {computed, h, onMounted, ref, watch} from 'vue';
 import {useAuthStore} from '../stores/auth';
 import {useIpoStore} from '../stores/ipos';
 import TheHeader from "../components/TheHeader.vue";
+import Preferences from '../components/Preferences.vue';
 import IpoList from '../components/IpoList.vue';
 import Calendar from '../components/Calendar.vue';
 import IpoPortfolio from '../components/IpoPortfolio.vue';
@@ -47,6 +48,7 @@ watch(() => authStore.isAuthenticated, () => {
 
 const currentComponent = computed(() => {
   const components = {
+    'Preferences': Preferences,
     'IpoList': IpoList,
     'Calendar': Calendar,
     'IpoPortfolio': IpoPortfolio,
