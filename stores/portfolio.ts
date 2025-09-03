@@ -54,7 +54,7 @@ export const usePortfolioStore = defineStore('portfolio', {
             this.isLoading = true;
             this.error = null;
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos`, {
+                const response = await fetch(`${config.api.baseUrl}/user/portfolio-ipos`, {
                     headers: getAuthHeaders(authStore.token),
                 });
 
@@ -79,7 +79,7 @@ export const usePortfolioStore = defineStore('portfolio', {
             if (!authStore.isAuthenticated) return { success: false, message: 'Not authenticated.'};
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/user/portfolio-ipos/${ipoId}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(authStore.token),
                     body: JSON.stringify(data)
@@ -102,7 +102,7 @@ export const usePortfolioStore = defineStore('portfolio', {
             if (!authStore.isAuthenticated || !authStore.token) return;
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/user/portfolio-ipos/${ipoId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders(authStore.token),
                 });

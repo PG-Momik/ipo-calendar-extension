@@ -43,7 +43,7 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return
 
       try {
-        const response = await fetch(`${config.api.baseUrl}/api/user`, {
+        const response = await fetch(`${config.api.baseUrl}/user`, {
           headers: getAuthHeaders(this.token)
         })
 
@@ -107,7 +107,7 @@ export const useAuthStore = defineStore('auth', {
 
       if (tokenToRevoke) {
         try {
-          await fetch(`${config.api.baseUrl}/api/logout`, {
+          await fetch(`${config.api.baseUrl}/logout`, {
             method: 'POST',
             headers: getAuthHeaders(tokenToRevoke)
           });

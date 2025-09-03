@@ -2,7 +2,7 @@
   "private": true,
   "name": "ipo-calendar-extension",
   "description": "A simple chrome extension built with Extension.js and Vue.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": {
     "name": "Momik Shrestha",
     "email": "momik.shrestha@gmail.com",

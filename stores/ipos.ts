@@ -38,7 +38,7 @@ export const useIpoStore = defineStore('ipos', {
             this.error = null;
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/ipos`, {method: 'GET', headers: getAuthHeaders(token)});
+                const response = await fetch(`${config.api.baseUrl}/ipos`, {method: 'GET', headers: getAuthHeaders(token)});
 
                 const {data} = await handleApiResponse<Ipo[]>(response);
 
@@ -56,7 +56,7 @@ export const useIpoStore = defineStore('ipos', {
             this.addStatus[ipoId] = 'adding';
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/tracked-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/user/tracked-ipos/${ipoId}`, {
                     method: 'POST', headers: getAuthHeaders(token),
                     body: JSON.stringify({
                         'create_google_event': shouldCreateGoogleEvent
@@ -88,7 +88,7 @@ export const useIpoStore = defineStore('ipos', {
         async addToPortfolio(ipoId: number, token: string): Promise<{ status: 'success' | 'error', message: string }>
         {
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/portfolio-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/user/portfolio-ipos/${ipoId}`, {
                     method: 'POST',
                     headers: getAuthHeaders(token)
                 });

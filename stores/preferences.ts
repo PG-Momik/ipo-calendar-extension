@@ -24,7 +24,7 @@ export const usePreferenceStore = defineStore('preferences', {
             this.isLoading = true;
             this.error = null;
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/preferences`, {
+                const response = await fetch(`${config.api.baseUrl}/preferences`, {
                     headers: getAuthHeaders(authStore.token)
                 });
 
@@ -51,7 +51,7 @@ export const usePreferenceStore = defineStore('preferences', {
             this.isLoading = true;
             this.error = null;
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/preferences`, {
+                const response = await fetch(`${config.api.baseUrl}/preferences`, {
                     method: 'POST',
                     headers: getAuthHeaders(authStore.token),
                     body: JSON.stringify(newPreferences),

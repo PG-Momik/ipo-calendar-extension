@@ -19,7 +19,7 @@ export const useCalendarStore = defineStore('calendar', {
             this.error = null;
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/tracked-ipos`, {
+                const response = await fetch(`${config.api.baseUrl}/user/tracked-ipos`, {
                   headers: getAuthHeaders(authStore.token)
                 });
                 if (!response.ok) throw new Error('Failed to fetch tracked IPOs.');
@@ -39,7 +39,7 @@ export const useCalendarStore = defineStore('calendar', {
             if (!authStore.isAuthenticated || !authStore.token) return;
 
             try {
-                const response = await fetch(`${config.api.baseUrl}/api/user/tracked-ipos/${ipoId}`, {
+                const response = await fetch(`${config.api.baseUrl}/user/tracked-ipos/${ipoId}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders(authStore.token),
                 });
