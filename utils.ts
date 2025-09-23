@@ -1,5 +1,4 @@
 
-// Environment configuration
 export const config = {
   api: {
     baseUrl: 'http://localhost:8000/api/v1',
@@ -22,8 +21,8 @@ export function getAuthHeaders(token?: string | null): HeadersInit {
     return headers;
 }
 
-export async function handleApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    const json = (await response.json()) as ApiResponse<T>;
+export async function handleApiResponse<T>(response: Response){
+    const json = (await response.json());
 
     if (!response.ok || json.status === 'error') {
         throw new Error(json.message || 'Unexpected server error');

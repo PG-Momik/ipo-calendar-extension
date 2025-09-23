@@ -22,15 +22,22 @@
     "vue3-apexcharts": "^1.8.0"
   },
   "devDependencies": {
+    "@mswjs/interceptors": "^0.39.6",
+    "@pinia/testing": "^1.0.2",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
     "extension": "^2.0.0-rc.38",
+    "jsdom": "^27.0.0",
+    "msw": "^2.11.3",
     "typescript": "5.3.3",
-    "vite": "^7.1.1"
+    "vite": "^7.1.1",
+    "vitest": "^3.2.4"
   },
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS=--openssl-legacy-provider extension dev",
     "start": "NODE_OPTIONS=--openssl-legacy-provider extension start",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider extension build"
+    "build": "NODE_OPTIONS=--openssl-legacy-provider extension build",
+    "test": "vitest" 
   }
 }
