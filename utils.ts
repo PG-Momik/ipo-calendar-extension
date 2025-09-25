@@ -1,10 +1,10 @@
 
 export const config = {
   api: {
-    baseUrl: 'http://localhost:8000/api/v1',
+    baseUrl: 'https://ipocalendarnepal/api/v1',
   },
   oauth: {
-    redirectUrl: 'http://localhost:8000/auth/google/redirect',
+    redirectUrl: 'https://ipocalendarnepal/auth/google/redirect',
   },
 } as const;
 
