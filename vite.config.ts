@@ -16,8 +16,8 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'jsdom', // or 'happy-dom'
+    environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    globals: true, // if you want to use global test functions without imports
+    globals: true,
   },
 })
