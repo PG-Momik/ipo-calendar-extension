@@ -1,11 +1,11 @@
-
 export const config = {
-  api: {
-    baseUrl: 'https://ipocalendarnepal.com/api/v1',
-  },
-  oauth: {
-    redirectUrl: 'https://ipocalendarnepal.com/auth/google/redirect',
-  },
+    api: {
+        baseUrl: 'https://ipocalendarnepal.com/api/v1',
+    },
+    oauth: {
+        redirectUrl: 'https://ipocalendarnepal.com/auth/google/redirect',
+        extensionCallbackUrl: 'https://mllgdeaebfneacejjigdhceekbhmpofe.chromiumapp.org/',
+    },
 } as const;
 
 export function getAuthHeaders(token?: string | null): HeadersInit {

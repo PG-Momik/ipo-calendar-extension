@@ -84,18 +84,23 @@ export const useAuthStore = defineStore('auth', {
 
         const url = new URL(finalRedirectUrl);
         const token = url.searchParams.get('token');
+        const error = url.searchParams.get('error');
+
+        if (error) {
+          const message = url.searchParams.get('message') || 'Authentication failed';
+          throw new Error(message);
+        }
 
         if (!token) {
           throw new Error('Token not found in redirect URL.');
         }
 
         await storage.local.set({ authToken: token });
-
         this.token = token;
-
         await this.fetchUser();
       } catch (error) {
         console.error('Login failed:', error);
+        throw error;
       } finally {
         this.isLoading = false;
       }
