@@ -3,7 +3,7 @@ export const config = {
         baseUrl: 'https://ipocalendarnepal.com/api/v1',
     },
     oauth: {
-        redirectUrl: 'https://ipocalendarnepal.com/auth/google/redirect',
+        redirectUrl: 'https://ipocalendarnepal.com/auth/google/callback',
         extensionCallbackUrl: 'https://mllgdeaebfneacejjigdhceekbhmpofe.chromiumapp.org/',
     },
 } as const;
