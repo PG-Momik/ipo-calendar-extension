@@ -62,8 +62,9 @@ beforeAll(() => {
   
   global.chrome = {
     identity: {
+      getRedirectURL: vi.fn(() => 'https://test-extension-id.chromiumapp.org/'),
       launchWebAuthFlow: vi.fn(async ({ url, interactive }) => {
-        if (url === config.oauth.redirectUrl && interactive) {
+        if (url.startsWith(config.oauth.redirectUrl) && interactive) {
           return `${config.oauth.redirectUrl}?token=mock-auth-token`;
         }
         return '';

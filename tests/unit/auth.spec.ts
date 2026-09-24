@@ -49,7 +49,7 @@ describe('Auth Store', () => {
       // Assert
       expect(authStore.isLoading).toBe(false);
       expect(global.chrome.identity.launchWebAuthFlow).toHaveBeenCalledWith({
-        url: config.oauth.redirectUrl,
+        url: `${config.oauth.redirectUrl}?redirect_uri=${encodeURIComponent('https://test-extension-id.chromiumapp.org/')}`,
         interactive: true,
       });
       expect(mockStorageLocalSet).toHaveBeenCalledWith({ authToken: 'mock-new-auth-token' });
@@ -67,7 +67,7 @@ describe('Auth Store', () => {
       global.chrome.runtime.lastError = { message: 'User cancelled authentication.' };
 
       // Act
-      await authStore.handleLogin();
+      await expect(authStore.handleLogin()).rejects.toThrow('User cancelled authentication.');
 
       // Assert
       expect(authStore.isLoading).toBe(false);
@@ -88,7 +88,7 @@ describe('Auth Store', () => {
       );
 
       // Act
-      await authStore.handleLogin();
+      await expect(authStore.handleLogin()).rejects.toThrow('Token not found in redirect URL.');
 
       // Assert
       expect(authStore.isLoading).toBe(false);

@@ -71,10 +71,12 @@ export const useAuthStore = defineStore('auth', {
       this.isLoading = true;
 
       try {
-        const authUrl = config.oauth.redirectUrl;
+        const redirectUri = chrome.identity.getRedirectURL();
+        const authUrl = new URL(config.oauth.redirectUrl);
+        authUrl.searchParams.append('redirect_uri', redirectUri);
 
         const finalRedirectUrl = await chrome.identity.launchWebAuthFlow({
-          url: authUrl,
+          url: authUrl.toString(),
           interactive: true,
         });
 
